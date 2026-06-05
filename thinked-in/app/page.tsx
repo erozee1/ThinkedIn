@@ -1,7 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { ArrowRight } from "lucide-react";
-import { GlassLinkButton } from "@/components/GlassButton";
+import GetStartedBubble from "@/components/landing/GetStartedBubble";
 import ChatDemo from "@/components/landing/ChatDemo";
 
 export default async function Home() {
@@ -29,12 +28,9 @@ export default async function Home() {
           <span className="text-foreground/55">in one prompt</span>
         </h1>
 
-        <GlassLinkButton href="/sign-in" className="mt-8">
-          Get started
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-        </GlassLinkButton>
+        <GetStartedBubble />
 
-        <div className="mt-14 w-full">
+        <div className="mt-12 w-full">
           <ChatDemo />
         </div>
       </div>

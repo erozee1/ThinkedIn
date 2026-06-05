@@ -44,13 +44,13 @@ export default function ChatDemo() {
   const current = CONVERSATIONS[conv];
 
   return (
-    <div className="mx-auto flex min-h-[340px] w-full max-w-xl flex-col gap-4 px-6">
+    <div className="mx-auto flex min-h-[240px] w-full max-w-sm flex-col gap-2.5 px-4">
       {/* User message — right side. Keyed by conv so it re-animates on switch. */}
       <div className="flex justify-end">
         <AnimatePresence mode="wait">
           <motion.div
             key={conv}
-            className="max-w-[78%] rounded-3xl rounded-br-lg bg-indigo-500/40 px-5 py-3 text-[15px] font-medium text-white/90 ring-1 ring-white/10"
+            className="max-w-[80%] rounded-2xl rounded-br-md bg-indigo-500/40 px-3.5 py-2 text-[13px] font-medium text-white/90 ring-1 ring-white/10"
             initial={{ opacity: 0, y: 14, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10 }}
@@ -62,7 +62,7 @@ export default function ChatDemo() {
       </div>
 
       {/* AI side — left */}
-      <div className="flex flex-col items-start gap-3">
+      <div className="flex flex-col items-start gap-2.5">
         <AnimatePresence mode="wait">
           {phase === 1 && (
             <motion.div
@@ -78,15 +78,15 @@ export default function ChatDemo() {
           {phase === 2 && (
             <motion.div
               key={`answer-${conv}`}
-              className="flex w-full flex-col gap-3"
+              className="flex w-full flex-col gap-2"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
             >
-              <div className="max-w-[80%] rounded-3xl rounded-bl-lg glass px-5 py-3 text-[15px] text-foreground">
+              <div className="max-w-[80%] rounded-2xl rounded-bl-md glass px-3.5 py-2 text-[13px] text-foreground">
                 {current.a}
               </div>
-              <div className="flex w-full flex-col gap-2">
+              <div className="flex w-full flex-col gap-1.5">
                 {current.people.map((person, i) => (
                   <motion.div
                     key={person.id}
@@ -94,7 +94,7 @@ export default function ChatDemo() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.25 + i * 0.3, type: "spring", stiffness: 200, damping: 22 }}
                   >
-                    <ProfileCard person={person} />
+                    <ProfileCard person={person} compact />
                   </motion.div>
                 ))}
               </div>
