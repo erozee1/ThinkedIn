@@ -44,13 +44,13 @@ export default function ChatDemo() {
   const current = CONVERSATIONS[conv];
 
   return (
-    <div className="mx-auto flex min-h-[240px] w-full max-w-sm flex-col gap-2.5 px-4">
+    <div className="mx-auto flex min-h-[320px] w-full max-w-md flex-col gap-3 px-4">
       {/* User message — right side. Keyed by conv so it re-animates on switch. */}
       <div className="flex justify-end">
         <AnimatePresence mode="wait">
           <motion.div
             key={conv}
-            className="max-w-[80%] rounded-2xl rounded-br-md bg-gradient-blue px-3.5 py-2 text-[13px] font-medium text-white shadow-sm"
+            className="max-w-[82%] rounded-2xl rounded-br-md bg-gradient-blue px-4 py-2.5 text-sm font-medium text-white shadow-md ring-1 ring-white/40"
             initial={{ opacity: 0, y: 14, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10 }}
@@ -62,7 +62,7 @@ export default function ChatDemo() {
       </div>
 
       {/* AI side — left */}
-      <div className="flex flex-col items-start gap-2.5">
+      <div className="flex flex-col items-start gap-3">
         <AnimatePresence mode="wait">
           {phase === 1 && (
             <motion.div
@@ -83,10 +83,10 @@ export default function ChatDemo() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
             >
-              <div className="max-w-[80%] rounded-2xl rounded-bl-md glass px-3.5 py-2 text-[13px] text-foreground">
+              <div className="max-w-[82%] rounded-2xl rounded-bl-md glass px-4 py-2.5 text-sm text-foreground">
                 {current.a}
               </div>
-              <div className="flex w-full flex-col gap-1.5">
+              <div className="flex w-full flex-col gap-2">
                 {current.people.map((person, i) => (
                   <motion.div
                     key={person.id}
@@ -94,7 +94,7 @@ export default function ChatDemo() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.25 + i * 0.3, type: "spring", stiffness: 200, damping: 22 }}
                   >
-                    <ProfileCard person={person} compact />
+                    <ProfileCard person={person} />
                   </motion.div>
                 ))}
               </div>

@@ -26,17 +26,12 @@ export default function LandingHero() {
       animate={{ opacity: leaving ? 0 : 1, scale: leaving ? 0.985 : 1 }}
       transition={{ duration: 0.42, ease: "easeInOut" }}
     >
-      {/* Brand — top, on a glass masthead */}
+      {/* Brand — top, on a solid white masthead */}
       <header className="relative flex items-center justify-center px-6 py-6">
-        {/* masthead bar */}
+        {/* solid white masthead bar */}
         <div
           aria-hidden
-          className="absolute inset-x-0 top-0 h-[68px] border-b border-white/40 bg-white/35 shadow-sm backdrop-blur-md"
-        />
-        {/* soft glow behind the wordmark */}
-        <div
-          aria-hidden
-          className="absolute left-1/2 top-1 h-14 w-52 -translate-x-1/2 rounded-full bg-[#0a66c2]/25 blur-2xl"
+          className="absolute inset-x-0 top-0 h-[68px] border-b border-black/10 bg-white shadow-sm"
         />
         {/* TODO: replace wordmark with the real PNG logo when provided. */}
         <span className="relative text-xl font-semibold tracking-tight text-gradient">
@@ -46,10 +41,10 @@ export default function LandingHero() {
 
       {/* Headline → CTA → live chat showcase */}
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center px-6 pb-16 pt-4 text-center">
-        <h1 className="text-balance text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
+        <h1 className="text-balance text-4xl font-semibold leading-tight tracking-tight text-white drop-shadow-[0_2px_10px_rgba(12,74,140,0.4)] sm:text-5xl">
           Talk to your network
           <br />
-          <span className="text-gradient">in one prompt</span>
+          <span className="text-white/80">in one prompt</span>
         </h1>
 
         <GetStartedBubble onStart={start} />
