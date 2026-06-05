@@ -39,7 +39,7 @@ export default function ChatInput({
           <button
             onClick={submit}
             disabled={disabled || !value.trim()}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-blue text-white transition-opacity disabled:opacity-30"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-blue text-white transition-all hover:brightness-110 active:scale-90 disabled:scale-100 disabled:opacity-30"
             aria-label="Send"
           >
             <ArrowUp className="h-4 w-4" />
@@ -47,7 +47,7 @@ export default function ChatInput({
         </div>
         <div className="mt-2 flex items-center justify-center gap-1 text-xs text-muted/70">
           {/* Cosmetic model selector */}
-          <button className="inline-flex items-center gap-1 rounded-full px-2 py-1 transition-colors hover:text-foreground">
+          <button className="inline-flex items-center gap-1 rounded-full px-2 py-1 transition-all hover:text-foreground active:scale-95">
             Claude Sonnet 4
             <ChevronDown className="h-3 w-3" />
           </button>

@@ -26,10 +26,20 @@ export default function LandingHero() {
       animate={{ opacity: leaving ? 0 : 1, scale: leaving ? 0.985 : 1 }}
       transition={{ duration: 0.42, ease: "easeInOut" }}
     >
-      {/* Brand — top */}
-      <header className="flex items-center justify-center px-6 py-7">
+      {/* Brand — top, on a glass masthead */}
+      <header className="relative flex items-center justify-center px-6 py-6">
+        {/* masthead bar */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-[68px] border-b border-white/40 bg-white/35 shadow-sm backdrop-blur-md"
+        />
+        {/* soft glow behind the wordmark */}
+        <div
+          aria-hidden
+          className="absolute left-1/2 top-1 h-14 w-52 -translate-x-1/2 rounded-full bg-[#0a66c2]/25 blur-2xl"
+        />
         {/* TODO: replace wordmark with the real PNG logo when provided. */}
-        <span className="text-xl font-semibold tracking-tight text-gradient">
+        <span className="relative text-xl font-semibold tracking-tight text-gradient">
           thinkedin
         </span>
       </header>

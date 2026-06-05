@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Menu, Sparkles } from "lucide-react";
 import type { ChatMessage, ChatSession, ProfileCardData } from "@/lib/types";
 import { seedChatSessions } from "@/lib/mock-data";
 import ChatSidebar from "./ChatSidebar";
@@ -36,6 +36,7 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
   ]);
   const [activeId, setActiveId] = useState(sessions[0].id);
   const [streaming, setStreaming] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
 
   const active = sessions.find((s) => s.id === activeId) ?? sessions[0];
 
@@ -102,15 +103,40 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
 
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-background">
+      {/* Mobile drawer backdrop */}
+      {navOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/30 md:hidden"
+          aria-hidden
+          onClick={() => setNavOpen(false)}
+        />
+      )}
+
       <ChatSidebar
         sessions={sessions}
         activeId={activeId}
         onSelect={setActiveId}
         onNewChat={handleNewChat}
         onReimport={onReimport}
+        open={navOpen}
+        onClose={() => setNavOpen(false)}
       />
 
       <main className="relative flex min-w-0 flex-1 flex-col">
+        {/* Mobile top bar with menu toggle */}
+        <div className="relative z-10 flex items-center gap-3 border-b border-border bg-surface/85 px-4 py-3 backdrop-blur md:hidden">
+          <button
+            onClick={() => setNavOpen(true)}
+            aria-label="Open menu"
+            className="rounded-lg p-1.5 text-foreground transition hover:bg-black/[0.05] active:scale-90"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <span className="text-sm font-semibold tracking-tight text-gradient">
+            thinkedin
+          </span>
+        </div>
+
         <div className="aurora opacity-60" aria-hidden />
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           {active.messages.length === 0 ? (
@@ -159,7 +185,7 @@ function EmptyState({
           <button
             key={p}
             onClick={() => onPick(p)}
-            className="rounded-full border border-border bg-surface px-4 py-2 text-sm text-foreground shadow-sm transition-colors hover:bg-black/[0.04]"
+            className="rounded-full border border-border bg-surface px-4 py-2 text-sm text-foreground shadow-sm transition-all hover:scale-[1.03] hover:bg-black/[0.04] hover:shadow active:scale-95"
           >
             {p}
           </button>

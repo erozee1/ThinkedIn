@@ -2,11 +2,12 @@
 
 import { SignUp } from "@clerk/nextjs";
 import { motion } from "framer-motion";
+import BackgroundFX from "@/components/BackgroundFX";
 
 export default function SignUpPage() {
   return (
     <main className="relative flex min-h-dvh items-center justify-center overflow-hidden px-4">
-      <div className="aurora" aria-hidden />
+      <BackgroundFX />
       <motion.div
         className="relative z-10"
         initial={{ opacity: 0, scale: 0.96, y: 10 }}

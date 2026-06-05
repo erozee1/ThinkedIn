@@ -108,6 +108,44 @@ body {
   background-image: linear-gradient(120deg, #0a66c2 0%, #378fe9 100%);
 }
 
+/* Floating color blobs — soft, slow-moving energy over the static base. */
+.fx-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.5;
+  will-change: transform;
+}
+@keyframes fx-float-1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(46px, 34px) scale(1.12); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+@keyframes fx-float-2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-54px, 26px) scale(1.08); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+@keyframes fx-float-3 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(32px, -44px) scale(1.14); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* Network nodes — faint floating "network" decoration in the periphery. */
+@keyframes fx-node-float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-16px); }
+  100% { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-blob,
+  .fx-node-group {
+    animation: none !important;
+  }
+}
+
 /* Iridescent oil-slick sheen — rotate a conic gradient for a glassy shimmer. */
 .iridescent-sheen {
   background: conic-gradient(

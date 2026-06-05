@@ -174,13 +174,13 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                       setFileName(null);
                       setStep("import");
                     }}
-                    className="rounded-full px-5 py-2.5 text-sm font-medium text-muted transition-colors hover:text-foreground"
+                    className="rounded-full px-5 py-2.5 text-sm font-medium text-muted transition-all hover:text-foreground active:scale-95"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={startEnrichment}
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-blue px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-transform hover:scale-[1.03]"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-blue px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:scale-[1.03] hover:brightness-110 active:scale-95"
                   >
                     I consent
                     <ArrowRight className="h-4 w-4" />
