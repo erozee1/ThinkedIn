@@ -30,7 +30,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-3xl rounded-br-lg bg-gradient-to-br from-indigo-glow/90 to-violet-glow/80 px-5 py-3 text-[15px] text-white shadow-lg">
+        <div className="max-w-[80%] rounded-3xl rounded-br-lg bg-indigo-500/40 px-5 py-3 text-[15px] text-white/90 ring-1 ring-white/10">
           {message.content}
         </div>
       </div>

@@ -58,6 +58,37 @@ export const landingDemoPeople: ProfileCardData[] = [
   },
 ];
 
+// Second landing loop: "find me 3 cracked cofounders my age"
+export const landingCofounders: ProfileCardData[] = [
+  {
+    id: "cf-1",
+    name: "Theo Nakamura",
+    position: "Founder · 21",
+    company: "building dev tools",
+    location: "London, UK",
+    avatarUrl: portrait("men", 18),
+    linkedinUrl: "https://linkedin.com/in/theo-nakamura",
+  },
+  {
+    id: "cf-2",
+    name: "Amelia Frost",
+    position: "Co-founder · 22",
+    company: "AI agents",
+    location: "Cambridge, UK",
+    avatarUrl: portrait("women", 79),
+    linkedinUrl: "https://linkedin.com/in/amelia-frost",
+  },
+  {
+    id: "cf-3",
+    name: "Raj Malhotra",
+    position: "Founder · 20",
+    company: "fintech",
+    location: "London, UK",
+    avatarUrl: portrait("men", 54),
+    linkedinUrl: "https://linkedin.com/in/raj-malhotra",
+  },
+];
+
 /* -------------------------------------------------------------------------- */
 /* Enrichment animation roster — people that "pop in" while enriching          */
 /* -------------------------------------------------------------------------- */
