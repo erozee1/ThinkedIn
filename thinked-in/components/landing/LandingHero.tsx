@@ -28,10 +28,10 @@ export default function LandingHero() {
     >
       {/* Brand — top-left, on a solid white masthead */}
       <header className="relative flex items-center px-6 py-6 sm:px-8">
-        {/* solid white masthead bar */}
+        {/* slightly translucent masthead bar */}
         <div
           aria-hidden
-          className="absolute inset-x-0 top-0 h-[68px] border-b border-black/10 bg-white shadow-sm"
+          className="absolute inset-x-0 top-0 h-[68px] border-b border-black/10 bg-white/80 shadow-sm backdrop-blur-md"
         />
         {/* TODO: replace wordmark with the real PNG logo when provided. */}
         <span className="relative text-xl font-semibold tracking-tight text-gradient">
