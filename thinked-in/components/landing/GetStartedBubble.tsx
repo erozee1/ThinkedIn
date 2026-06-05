@@ -1,46 +1,68 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import Lottie, { type LottieRefCurrentProps } from "lottie-react";
-// Bubble-pop animation. To swap for a different one, replace this file with any
-// LottieFiles bubble-pop JSON (public/lottie/bubble-pop.json).
-import bubblePop from "@/public/lottie/bubble-pop.json";
 
-// "Get started" as a water bubble (Lottie) that pops on click, then plays an
-// iris transition into the sign-in page.
+// Deterministic droplet spray (no Math.random → no hydration issues).
+const DROPLETS = Array.from({ length: 12 }, (_, i) => {
+  const angle = (i / 12) * Math.PI * 2;
+  const dist = 60 + (i % 3) * 18;
+  return {
+    id: i,
+    x: Math.cos(angle) * dist,
+    y: Math.sin(angle) * dist,
+    size: 7 + (i % 4) * 2,
+  };
+});
+
+// "Get started" as a glossy bubble that pops into droplets + a ripple on click,
+// then plays an iris transition into the sign-in page.
 export default function GetStartedBubble() {
   const router = useRouter();
-  const lottieRef = useRef<LottieRefCurrentProps>(null);
   const [popped, setPopped] = useState(false);
 
   const handleClick = () => {
     if (popped) return;
     setPopped(true);
-    lottieRef.current?.goToAndPlay(0, true);
-    // Navigate once the bubble has popped and the iris has covered the screen.
-    setTimeout(() => router.push("/sign-in"), 820);
+    setTimeout(() => router.push("/sign-in"), 720);
   };
 
   return (
     <>
       <div className="relative mt-8 inline-flex items-center justify-center">
-        {/* Bubble-pop animation, played on click (sits behind the button). */}
-        <div
-          aria-hidden
-          className={`pointer-events-none absolute h-52 w-52 transition-opacity duration-150 ${
-            popped ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <Lottie
-            lottieRef={lottieRef}
-            animationData={bubblePop}
-            autoplay={false}
-            loop={false}
-          />
-        </div>
+        {/* Ripple shockwave */}
+        <AnimatePresence>
+          {popped && (
+            <motion.span
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#0a66c2]/60"
+              initial={{ scale: 0.4, opacity: 0.8 }}
+              animate={{ scale: 2.8, opacity: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Droplet spray */}
+        {popped &&
+          DROPLETS.map((d) => (
+            <motion.span
+              key={d.id}
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 top-1/2 rounded-full bg-gradient-blue"
+              style={{ width: d.size, height: d.size }}
+              initial={{ x: -d.size / 2, y: -d.size / 2, opacity: 0, scale: 0.4 }}
+              animate={{
+                x: d.x - d.size / 2,
+                y: d.y - d.size / 2 + 16,
+                opacity: [0, 1, 0],
+                scale: [0.4, 1, 0.5],
+              }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            />
+          ))}
 
         <AnimatePresence>
           {!popped && (
@@ -51,8 +73,8 @@ export default function GetStartedBubble() {
               initial={{ scale: 1, opacity: 1 }}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.95 }}
-              exit={{ scale: 1.4, opacity: 0 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
+              exit={{ scale: 1.35, opacity: 0 }}
+              transition={{ duration: 0.16, ease: "easeOut" }}
             >
               {/* Glossy bubble highlight */}
               <span
@@ -76,7 +98,7 @@ export default function GetStartedBubble() {
             aria-hidden
             initial={{ clipPath: "circle(0% at 50% 42%)" }}
             animate={{ clipPath: "circle(150% at 50% 42%)" }}
-            transition={{ duration: 0.6, ease: "easeInOut", delay: 0.18 }}
+            transition={{ duration: 0.55, ease: "easeInOut", delay: 0.15 }}
           />
         )}
       </AnimatePresence>
