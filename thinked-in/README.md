@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# thinkedin
+
+**Talk to your network in one prompt.** Import your LinkedIn connections and chat
+with them — ask in plain English and thinkedin surfaces the right people.
+
+## Status
+
+The **frontend** is built and runs against **stubbed `/api` routes** that return
+realistic mock data. The real backend (Supabase + pgvector, Apify enrichment,
+OpenAI embeddings, live Claude) drops in behind those same endpoints later without
+changing components.
+
+### What's here
+- **Landing** (`app/page.tsx`) — looping animated chat demo behind a glassy CTA.
+- **Onboarding** (`components/dashboard/OnboardingFlow.tsx`) — import prompt →
+  consent → animated Apify-style enrichment → "Let's chat".
+- **Chat** (`components/dashboard/ChatApp.tsx`) — Claude-style sidebar + streaming
+  chat that renders matched LinkedIn profile cards inline.
+- **Stub API** (`app/api/{upload,enrich,chat}`) — Clerk-guarded handlers returning
+  mock data; `/api/chat` streams NDJSON.
 
 ## Getting Started
 
-First, run the development server:
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Create `.env.local` with the required keys (see below).
+3. Run the dev server:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000).
+
+## Environment variables
+
+Create a `.env.local` (gitignored). **Clerk keys are required to run the app**:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clerk auth — REQUIRED. Get from the Clerk dashboard or a teammate.
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+
+# Future backend (not used yet — frontend uses stub /api routes):
+# NEXT_PUBLIC_SUPABASE_URL=
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=
+# SUPABASE_SERVICE_ROLE_KEY=
+# APIFY_TOKEN=
+# OPENAI_API_KEY=
+# ANTHROPIC_API_KEY=
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · Clerk (auth) ·
+framer-motion · lucide-react.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Demo flow
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Land on `/` → **Get started** → sign in (Clerk) → onboarding import prompt → drop a
+LinkedIn `Connections.csv` → consent → enrichment animation → **Let's chat** → ask
+*"Find me someone who owns a software company in England."* Returning users skip
+straight to chat; **Re-import** in the sidebar replays onboarding.
