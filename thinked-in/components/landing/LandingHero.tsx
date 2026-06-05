@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import GetStartedBubble from "./GetStartedBubble";
-import ChatDemo from "./ChatDemo";
+import MockChatWindow from "./MockChatWindow";
 
 // Landing content. Fades out over the (shared, static) aurora background while
 // the sign-in page fades its card in — so the background never changes color
@@ -26,8 +26,8 @@ export default function LandingHero() {
       animate={{ opacity: leaving ? 0 : 1, scale: leaving ? 0.985 : 1 }}
       transition={{ duration: 0.42, ease: "easeInOut" }}
     >
-      {/* Brand — top, on a solid white masthead */}
-      <header className="relative flex items-center justify-center px-6 py-6">
+      {/* Brand — top-left, on a solid white masthead */}
+      <header className="relative flex items-center px-6 py-6 sm:px-8">
         {/* solid white masthead bar */}
         <div
           aria-hidden
@@ -49,8 +49,8 @@ export default function LandingHero() {
 
         <GetStartedBubble onStart={start} />
 
-        <div className="mt-12 w-full">
-          <ChatDemo />
+        <div className="mt-14 w-full">
+          <MockChatWindow />
         </div>
       </div>
     </motion.div>
