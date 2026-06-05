@@ -40,6 +40,12 @@ Create a `.env.local` (gitignored). **Clerk keys are required to run the app**:
 # Clerk auth — REQUIRED. Get from the Clerk dashboard or a teammate.
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
+# Use our themed in-app sign-in/up pages instead of Clerk's hosted portal.
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+
+# Gemini — used by /api/chat for chat replies.
+GEMINI_API_KEY=
 
 # Future backend (not used yet — frontend uses stub /api routes):
 # NEXT_PUBLIC_SUPABASE_URL=
