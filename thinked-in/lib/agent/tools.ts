@@ -39,7 +39,8 @@ export function toolsForMode(mode: MessagesMode): Anthropic.Tool[] {
       description:
         "Semantic search for people matching a DESCRIPTION of the ideal candidate (your words, " +
         "not the user's raw sentence). Use for 'find someone who…' / goal-implies-a-person queries. " +
-        "Over-fetch (limit 30-40) then judge.",
+        "Over-fetch (limit 30-40) then judge. Results are for YOUR reasoning only — " +
+        "call present_connections with your final picks to show cards to the user.",
       input_schema: {
         type: "object",
         properties: {
@@ -55,7 +56,8 @@ export function toolsForMode(mode: MessagesMode): Anthropic.Tool[] {
       description:
         "Exact counts/lists by attribute. mode='count' returns an exact number over the whole network. " +
         "Use for 'how many…', 'list all…', 'who works at X', 'who do I know well'. " +
-        (relAllowed ? "Relationship filters available." : ""),
+        (relAllowed ? "Relationship filters available. " : "") +
+        "For 'list' mode, call present_connections with your final picks after filtering.",
       input_schema: {
         type: "object",
         properties: {
@@ -88,7 +90,8 @@ export function toolsForMode(mode: MessagesMode): Anthropic.Tool[] {
       name: "keyword_search",
       description:
         "Lexical search for a SPECIFIC word (niche skill, named tool, exact title) that semantic search " +
-        "might miss. Complements search_by_meaning — run both and merge when a query has a concrete keyword.",
+        "might miss. Complements search_by_meaning — run both and merge when a query has a concrete keyword. " +
+        "Results are for YOUR reasoning only — call present_connections with your final picks.",
       input_schema: {
         type: "object",
         properties: {
@@ -97,6 +100,23 @@ export function toolsForMode(mode: MessagesMode): Anthropic.Tool[] {
           limit: { type: "integer" },
         },
         required: ["terms"],
+      },
+    },
+    {
+      name: "present_connections",
+      description:
+        "Show profile cards to the user in the UI. Call this ONCE at the end with only the people " +
+        "you are actually recommending — typically 1–5. Do NOT pass everyone you searched; only the best fits.",
+      input_schema: {
+        type: "object",
+        properties: {
+          linkedin_urls: {
+            type: "array",
+            items: { type: "string" },
+            description: "LinkedIn URLs of the connections to present, from the search results.",
+          },
+        },
+        required: ["linkedin_urls"],
       },
     },
   ];
@@ -145,7 +165,7 @@ export async function runTool(
         (input.filters as Filters) ?? {},
         typeof input.limit === "number" ? input.limit : 30,
       );
-      collectCards(rows.map(toCard));
+      // No collectCards here — model reasons over these, then calls present_connections.
       return rows.map(summarizeRow);
     }
     case "query_by_filter": {
@@ -158,7 +178,7 @@ export async function runTool(
         typeof input.limit === "number" ? input.limit : 40,
       );
       if (Array.isArray(res)) {
-        collectCards(res.map(toCard));
+        // No collectCards here — model picks from this list then calls present_connections.
         return res.map(summarizeRow);
       }
       return res; // { count }
@@ -175,36 +195,27 @@ export async function runTool(
         (input.fields as ("position" | "company" | "summary" | "skills")[]) ?? undefined,
         typeof input.limit === "number" ? input.limit : 40,
       );
-      collectCards(rows.map(toCard));
+      // No collectCards here — model picks from this list then calls present_connections.
       return rows.map(summarizeRow);
+    }
+    case "present_connections": {
+      const urls = (input.linkedin_urls as string[]) ?? [];
+      const { data } = await supa
+        .from("connections")
+        .select("id, first_name, last_name, position, company, location, country, seniority, industry, summary, linkedin_url, relationship_strength, last_contacted")
+        .eq("user_id", userId)
+        .in("linkedin_url", urls);
+      const rows = (data ?? []) as ConnectionRow[];
+      collectCards(rows.map(toCard));
+      return { presented: rows.length };
     }
     case "search_messages": {
       const hits = await searchMessages(supa, userId, String(input.query ?? ""), typeof input.limit === "number" ? input.limit : 20);
-      // Surface the connected people as cards too (when matched).
-      collectCards(
-        hits
-          .filter((h) => h.connection_id)
-          .map((h) =>
-            toCard({
-              id: h.connection_id!,
-              first_name: h.first_name,
-              last_name: h.last_name,
-              position: null,
-              company: h.company,
-              location: null,
-              country: null,
-              seniority: null,
-              industry: null,
-              summary: null,
-              linkedin_url: h.linkedin_url,
-              relationship_strength: null,
-              last_contacted: null,
-            }),
-          ),
-      );
+      // No collectCards here — model picks relevant hits then calls present_connections.
       return hits.map((h) => ({
         with: [h.first_name, h.last_name].filter(Boolean).join(" "),
         company: h.company,
+        linkedin_url: h.linkedin_url,
         direction: h.direction,
         sent_at: h.sent_at,
         subject: h.subject,

@@ -28,10 +28,13 @@ categories (big tech, FAANG) into concrete companies yourself. The query you pas
 description of the ideal candidate, never the user's raw sentence.
 
 Choose tools deliberately:
-- To FIND people who fit a goal, use search_by_meaning (over-fetch, then judge). Call it multiple times with
-  different angles if one search won't cover the goal.
+- To FIND people who fit a goal, use search_by_meaning (over-fetch 30-40, then judge). Call it multiple times
+  with different angles if one search won't cover the goal.
 - If the goal hinges on a SPECIFIC word, also run keyword_search and merge.
 - To COUNT or LIST by attribute, use query_by_filter. To SUMMARIZE the network shape, use get_network_stats.
+- ALWAYS finish with present_connections, passing only the 1–5 people you are actually recommending.
+  Never skip this step — it is how profile cards appear in the UI. Pass only the best fits, not everyone
+  you searched. If nothing truly fits, call present_connections with an empty list rather than padding.
 
 Filters are fuzzy but can still return empty. If a filtered search returns nothing, RELAX it (drop the
 location/company constraint, or switch to search_by_meaning) and retry before saying no one matches.
