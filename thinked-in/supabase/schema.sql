@@ -143,3 +143,38 @@ create policy "own jobs" on upload_jobs for all
   to authenticated
   using ((select auth.jwt() ->> 'sub') = user_id)
   with check ((select auth.jwt() ->> 'sub') = user_id);
+
+-- ── User goals (persistent objectives across sessions) ─────────────────────────
+create table if not exists user_goals (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null,
+  goal text not null,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists user_goals_user_active on user_goals(user_id, active);
+alter table user_goals enable row level security;
+drop policy if exists "own goals" on user_goals;
+create policy "own goals" on user_goals for all
+  to authenticated
+  using ((select auth.jwt() ->> 'sub') = user_id)
+  with check ((select auth.jwt() ->> 'sub') = user_id);
+
+-- ── Network actions (outreach tracking / promise loop) ─────────────────────────
+create table if not exists network_actions (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null,
+  connection_id uuid references connections(id) on delete cascade,
+  linkedin_url text,
+  action_type text not null default 'suggested',
+  suggested_at timestamptz not null default now()
+);
+
+create index if not exists network_actions_user_time on network_actions(user_id, suggested_at desc);
+alter table network_actions enable row level security;
+drop policy if exists "own actions" on network_actions;
+create policy "own actions" on network_actions for all
+  to authenticated
+  using ((select auth.jwt() ->> 'sub') = user_id)
+  with check ((select auth.jwt() ->> 'sub') = user_id);
