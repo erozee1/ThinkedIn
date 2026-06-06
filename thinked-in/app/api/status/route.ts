@@ -14,6 +14,7 @@ export async function GET() {
   ]);
 
   return Response.json({
+    userId, // your live Clerk id — used to debug data scoping
     hasConnections: (count ?? 0) > 0,
     connectionCount: count ?? 0,
     messagesMode: settings?.messages_mode ?? "none",
