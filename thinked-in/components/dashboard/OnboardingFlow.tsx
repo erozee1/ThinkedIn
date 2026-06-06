@@ -178,7 +178,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                   </div>
                 )}
 
-                <div className="mt-5 rounded-3xl border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,255,255,0.88))] p-5 shadow-[0_10px_30px_rgba(10,102,194,0.06)]">
+                <div className="mt-5 border-t border-black/[0.06] pt-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold text-foreground">
@@ -202,7 +202,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                     />
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between rounded-2xl border border-black/[0.06] bg-black/[0.025] px-3 py-2.5">
+                  <div className="mt-4 flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-medium text-foreground">
                         {messagesMode === "full"
@@ -215,7 +215,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                           : "The assistant only uses message counts and recency, not the text itself."}
                       </p>
                     </div>
-                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${
                       messagesMode === "full"
                         ? "bg-[#0a66c2]/10 text-[#0a66c2]"
                         : "bg-black/[0.06] text-muted"
@@ -224,7 +224,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                     </span>
                   </div>
 
-                  <p className="mt-3 text-xs leading-relaxed text-muted">
+                  <p className="mt-4 text-xs leading-relaxed text-muted">
                     Your import stays private to your account and isn&apos;t shared.
                   </p>
                 </div>
