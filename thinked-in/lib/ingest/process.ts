@@ -32,19 +32,35 @@ export async function processConnections(
   jobId: string,
 ): Promise<number> {
   const connections = parseConnections(connectionsCsv);
+  console.log(`[INGEST] processConnections start — ${connections.length} rows user=${userId} job=${jobId}`);
 
-  // Idempotent: clear this user's existing data before reloading.
-  await supa.from("messages").delete().eq("user_id", userId);
-  await supa.from("connections").delete().eq("user_id", userId);
+  const { error: delMsgErr } = await supa.from("messages").delete().eq("user_id", userId);
+  if (delMsgErr) console.error("[INGEST] messages delete error:", delMsgErr.message);
+  else console.log("[INGEST] existing messages cleared");
+
+  const { error: delConnErr } = await supa.from("connections").delete().eq("user_id", userId);
+  if (delConnErr) console.error("[INGEST] connections delete error:", delConnErr.message);
+  else console.log("[INGEST] existing connections cleared");
 
   const BATCH = 100;
   let done = 0;
   for (let i = 0; i < connections.length; i += BATCH) {
     const slice = connections.slice(i, i + BATCH);
-    const texts = slice.map((c) =>
-      buildProfileText({ fullName: fullName(c), position: c.position, company: c.company }),
-    );
-    const vectors = await embedTexts(texts);
+    console.log(`[INGEST] batch ${i}–${i + slice.length - 1}: embedding ${slice.length} profiles…`);
+
+    let vectors: (number[] | null)[];
+    try {
+      const texts = slice.map((c) =>
+        buildProfileText({ fullName: fullName(c), position: c.position, company: c.company }),
+      );
+      vectors = await embedTexts(texts);
+      console.log(`[INGEST] batch ${i}: embeddings received (${vectors.filter(Boolean).length}/${slice.length} non-null)`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error(`[INGEST] batch ${i}: embedTexts FAILED — "${msg}"`);
+      throw e;
+    }
+
     const rows = slice.map((c, k) => ({
       user_id: userId,
       first_name: c.firstName,
@@ -57,15 +73,22 @@ export async function processConnections(
       seniority: inferSeniority(c.position),
       company_norm: normalizeCompany(c.company),
       relationship_strength: "none",
-      enrichment_status: "enriched", // baseline: embedded + searchable
+      enrichment_status: "enriched",
       enriched_at: new Date().toISOString(),
       embedding: vectors[k] ? toVectorLiteral(vectors[k]!) : null,
     }));
+
     const { error } = await supa.from("connections").insert(rows);
-    if (error) throw new Error(`connections insert @${i}: ${error.message}`);
+    if (error) {
+      console.error(`[INGEST] batch ${i}: connections insert FAILED — ${error.message} (code=${error.code})`);
+      throw new Error(`connections insert @${i}: ${error.message}`);
+    }
     done += rows.length;
+    console.log(`[INGEST] batch ${i}: inserted ${rows.length} rows (${done}/${connections.length} total)`);
     await bumpJob(supa, jobId, done);
   }
+
+  console.log(`[INGEST] processConnections done — ${connections.length} rows stored`);
   return connections.length;
 }
 

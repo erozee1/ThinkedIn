@@ -6,7 +6,11 @@ export const EMBEDDING_DIM = 1536;
 
 let client: OpenAI | null = null;
 function openai(): OpenAI {
-  if (!client) client = new OpenAI({ apiKey: requireEnv("OPENAI_API_KEY") });
+  if (!client) {
+    const key = requireEnv("OPENAI_API_KEY");
+    console.log(`[EMBED] initialising OpenAI client (key=sk-...${key.slice(-4)})`);
+    client = new OpenAI({ apiKey: key });
+  }
   return client;
 }
 
