@@ -17,11 +17,11 @@ export async function GET() {
       .eq("user_id", userId);
 
     if (error) {
-      return Response.json({ hasConnections: false, error: error.message }, { status: 500 });
+      return Response.json({ userId, hasConnections: false, error: error.message }, { status: 500 });
     }
 
-    return Response.json({ hasConnections: (count ?? 0) > 0 });
+    return Response.json({ userId, hasConnections: (count ?? 0) > 0 });
   } catch {
-    return Response.json({ hasConnections: false }, { status: 500 });
+    return Response.json({ userId, hasConnections: false, error: "status_route_failed" }, { status: 500 });
   }
 }

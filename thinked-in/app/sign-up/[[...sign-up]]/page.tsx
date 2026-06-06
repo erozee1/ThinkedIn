@@ -1,11 +1,22 @@
 "use client";
 
-import { SignUp } from "@clerk/nextjs";
+import { SignUp, useAuth } from "@clerk/nextjs";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import BackgroundFX from "@/components/BackgroundFX";
 import SiteMast from "@/components/SiteMast";
 
 export default function SignUpPage() {
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isSignedIn) router.replace("/dashboard");
+  }, [isSignedIn, router]);
+
+  if (isSignedIn) return null;
+
   return (
     <main className="relative flex min-h-dvh flex-col overflow-hidden">
       <BackgroundFX />

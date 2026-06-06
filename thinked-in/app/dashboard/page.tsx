@@ -24,5 +24,13 @@ export default async function DashboardPage() {
     hasConnections = false;
   }
 
-  return <DashboardApp initialStage={hasConnections ? "chat" : "onboarding"} />;
+  return (
+    <DashboardApp
+      initialStage={hasConnections ? "chat" : "onboarding"}
+      debug={{
+        userId,
+        initialHasConnections: hasConnections,
+      }}
+    />
+  );
 }
