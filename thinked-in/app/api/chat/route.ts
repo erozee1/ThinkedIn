@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runAgent, type AgentTurnInput } from "@/lib/agent/run";
 import type { MessagesMode } from "@/lib/agent/tools";
+import { mubitRecall } from "@/lib/mubit";
 
 export const maxDuration = 60;
 
@@ -38,6 +39,25 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
   const mode = (settings?.messages_mode ?? "none") as MessagesMode;
 
+  // Build goal context: Supabase (structured) + Mubit (semantic recall).
+  // Both run in parallel to keep latency down.
+  const [{ data: goals }, mubitContext] = await Promise.all([
+    supa
+      .from("user_goals")
+      .select("goal")
+      .eq("user_id", userId)
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+      .limit(5),
+    mubitRecall(userId, message),
+  ]);
+
+  const goalLines = goals?.map((g: { goal: string }) => `- ${g.goal}`).join("\n") ?? "";
+  const goalContext =
+    [goalLines && `Goals:\n${goalLines}`, mubitContext && `Session memory:\n${mubitContext}`]
+      .filter(Boolean)
+      .join("\n\n") || undefined;
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -47,6 +67,7 @@ export async function POST(request: NextRequest) {
           supa,
           userId,
           mode,
+          goalContext,
           message,
           history,
           onTurnStart: () => send({ type: "turn_start" }),
