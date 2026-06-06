@@ -1,21 +1,19 @@
-# dependencies
-/node_modules
 
-# next
-/.next
-/out
-next-env.d.ts
-
-# env
+.DS_Store
 .env
 .env.local
 .env*.local
-
-# misc
-.DS_Store
+.vercel
+*.csv
 *.tsbuildinfo
-
+/.next
+/node_modules
+/out
 # confidential LinkedIn data exports — never commit
+# dependencies
+# env
+# misc
+# next
 Connections.csv
 messages.csv
-*.csv
+next-env.d.ts
