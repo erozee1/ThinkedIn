@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, BadgeCheck, AlertTriangle } from "lucide-react";
 import type { ProfileCardData } from "@/lib/types";
 
 interface ProfileCardProps {
@@ -34,12 +34,23 @@ export default function ProfileCard({
         unoptimized
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-foreground">{person.name}</p>
+        <p className="flex items-center gap-1.5 truncate font-medium text-foreground">
+          <span className="truncate">{person.name}</span>
+          {person.verified?.status === "match" ? (
+            <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-500" aria-label="Verified — role confirmed live" />
+          ) : person.verified?.status === "stale" ? (
+            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" aria-label="Role may have changed since import" />
+          ) : null}
+        </p>
         <p className="truncate text-sm text-muted">
           {person.position}
           {person.company ? ` · ${person.company}` : ""}
         </p>
-        {!compact && person.location ? (
+        {person.verified?.status === "stale" && (person.verified.currentPosition || person.verified.currentCompany) ? (
+          <p className="truncate text-xs text-amber-600">
+            Now: {[person.verified.currentPosition, person.verified.currentCompany].filter(Boolean).join(" · ")}
+          </p>
+        ) : !compact && person.location ? (
           <p className="truncate text-xs text-muted/70">{person.location}</p>
         ) : null}
       </div>

@@ -33,11 +33,25 @@ export interface Connection {
   enrichmentStatus: EnrichmentStatus;
 }
 
+/** Result of a premium live-verification (Apify re-scrape of the profile). */
+export interface ProfileVerification {
+  /** match = live role agrees with our record; stale = role changed; unreachable = scrape failed. */
+  status: "match" | "stale" | "unreachable";
+  /** Fresh title/company pulled from the live profile (null when unreachable). */
+  currentPosition: string | null;
+  currentCompany: string | null;
+  /** ISO timestamp the check ran. */
+  checkedAt: string;
+}
+
 /** A person card shown in the chat reply / landing demo. */
 export type ProfileCardData = Pick<
   Connection,
   "id" | "name" | "position" | "company" | "location" | "avatarUrl" | "linkedinUrl"
->;
+> & {
+  /** Present only when a premium verify_profiles call re-scraped this person. */
+  verified?: ProfileVerification;
+};
 
 export type ChatRole = "user" | "assistant";
 

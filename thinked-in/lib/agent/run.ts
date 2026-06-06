@@ -34,6 +34,8 @@ export interface RunAgentOptions {
   onToolCall?: (name: string, input: Record<string, unknown>) => void;
   /** Called after a tool returns, with a short result count/summary. */
   onToolResult?: (name: string, resultCount: number | null) => void;
+  /** Premium subscriber — unlocks the live Apify verify_profiles tool. */
+  premium?: boolean;
   anthropic?: Anthropic;
 }
 
@@ -43,14 +45,17 @@ export interface RunAgentOptions {
  */
 export async function runAgent(opts: RunAgentOptions): Promise<void> {
   const anthropic = opts.anthropic ?? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const tools = toolsForMode(opts.mode);
-  const system = systemPrompt(opts.mode, opts.goalContext);
+  const premium = opts.premium ?? false;
+  const tools = toolsForMode(opts.mode, premium);
+  const system = systemPrompt(opts.mode, opts.goalContext, premium);
 
   const collected: ProfileCardData[] = [];
   const ctx: ToolContext = {
     supa: opts.supa,
     userId: opts.userId,
     collectCards: (cards) => collected.push(...cards),
+    premium,
+    verifications: new Map(),
   };
 
   const messages: Anthropic.MessageParam[] = [

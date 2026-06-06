@@ -14,7 +14,14 @@ const CAPABILITY: Record<MessagesMode, string> = {
     "explain that enabling messages would let you answer, and fall back to profile-based reasoning.",
 };
 
-export function systemPrompt(mode: MessagesMode, goalContext?: string): string {
+export function systemPrompt(mode: MessagesMode, goalContext?: string, premium = false): string {
+  const verification = premium
+    ? `\n\nLIVE VERIFICATION (premium): once you've narrowed to your best 1–3 picks, call verify_profiles on them ` +
+      `BEFORE present_connections. It re-scrapes their live LinkedIn so you can catch roles that changed since the ` +
+      `user's import. If a pick comes back 'stale', say so plainly ("heads up — he's since left Google") and weigh ` +
+      `whether they still fit. Verify only people you're about to recommend (max 3) — it costs per profile.`
+    : "";
+
   const memory = goalContext
     ? `## Memory about this user\n${goalContext}\n\nUse this to anchor searches to stated goals without the user repeating themselves, surface follow-up opportunities ("you suggested X — they just became relevant again"), and never re-suggest someone already recommended unless the user explicitly asks.\n\n---\n\n`
     : "";
@@ -41,7 +48,7 @@ Choose tools deliberately:
 - To COUNT or LIST by attribute, use query_by_filter. To SUMMARIZE the network shape, use get_network_stats.
 - ALWAYS finish with present_connections, passing only the 1–5 people you are actually recommending.
   Never skip this step — it is how profile cards appear in the UI. Pass only the best fits, not everyone
-  you searched. If nothing truly fits, call present_connections with an empty list rather than padding.
+  you searched. If nothing truly fits, call present_connections with an empty list rather than padding.${verification}
 
 Filters are fuzzy but can still return empty. If a filtered search returns nothing, RELAX it (drop the
 location/company constraint, or switch to search_by_meaning) and retry before saying no one matches.
