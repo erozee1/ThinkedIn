@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import logo from "@/public/thinkedinBACK.png";
-import { MessagesSquare, Plus, RotateCcw, Settings, X } from "lucide-react";
+import { MessagesSquare, Plus, RotateCcw, Settings, Sparkles, X } from "lucide-react";
 import type { ChatSession } from "@/lib/types";
 
 interface ChatSidebarProps {
@@ -107,10 +107,20 @@ export default function ChatSidebar({
           <RotateCcw className="h-4 w-4" />
           Re-import network
         </button>
-        <button className="mb-2 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted transition-all hover:bg-black/[0.04] hover:text-foreground active:scale-[0.98]">
+        <Link
+          href="/billing"
+          className="mb-1 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted transition-all hover:bg-black/[0.04] hover:text-foreground active:scale-[0.98]"
+        >
           <Settings className="h-4 w-4" />
-          Settings
-        </button>
+          Billing & plan
+        </Link>
+        <Link
+          href="/pricing"
+          className="mb-2 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-[#0a66c2] transition-all hover:bg-[#0a66c2]/[0.06] active:scale-[0.98]"
+        >
+          <Sparkles className="h-4 w-4" />
+          Upgrade
+        </Link>
         <div className="flex items-center gap-2 rounded-lg px-1 py-1">
           <UserButton appearance={{ elements: { userButtonAvatarBox: "h-8 w-8" } }} />
           <span className="text-sm text-muted">Account</span>
