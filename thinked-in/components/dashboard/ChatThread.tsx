@@ -17,7 +17,7 @@ export default function ChatThread({ messages }: { messages: ChatMessage[] }) {
 
   return (
     <div className="scroll-slim flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-8">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-6 py-6">
         {messages.map((m) => (
           <MessageBubble key={m.id} message={m} />
         ))}
@@ -78,7 +78,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         {message.pending && !message.content ? (
           <ThinkingDots label="thinkedin is thinking…" />
         ) : (
-          <div className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass px-4 py-3 text-[15px] leading-relaxed text-foreground">
+          <div className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass-strong px-4 py-3 text-[15px] leading-relaxed text-foreground">
             <RichText text={message.content} />
           </div>
         )}

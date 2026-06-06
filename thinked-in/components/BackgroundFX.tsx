@@ -5,7 +5,7 @@ export default function BackgroundFX({ light = false }: { light?: boolean }) {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="aurora" />
-      {light && <div className="absolute inset-0 bg-white/50" />}
+      {light && <div className="absolute inset-0 bg-white/75" />}
 
       {/* Slow-drifting clouds */}
       <div className="cloud left-[6%] top-[10%] h-40 w-72" style={{ animation: "cloud-a 60s ease-in-out infinite alternate" }} />
