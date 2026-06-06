@@ -1,22 +1,41 @@
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-// Tells the dashboard whether the signed-in user already has a network loaded,
-// so it can show chat instead of onboarding (source of truth = DB, not localStorage).
+// Tells the dashboard whether the signed-in user already has a network loaded.
+// (Temporarily returns diagnostics to debug a prod data-scoping mismatch.)
 export async function GET() {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const supa = createAdminClient();
-  const [{ count }, { data: settings }] = await Promise.all([
-    supa.from("connections").select("id", { count: "exact", head: true }).eq("user_id", userId),
-    supa.from("user_settings").select("messages_mode").eq("user_id", userId).maybeSingle(),
-  ]);
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const svc = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+
+  let count: number | null = null;
+  let queryError: string | null = null;
+  let mode = "none";
+  try {
+    const supa = createAdminClient();
+    const res = await supa
+      .from("connections")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+    count = res.count ?? null;
+    queryError = res.error?.message ?? null;
+    const s = await supa.from("user_settings").select("messages_mode").eq("user_id", userId).maybeSingle();
+    mode = s.data?.messages_mode ?? "none";
+  } catch (e) {
+    queryError = e instanceof Error ? e.message : String(e);
+  }
 
   return Response.json({
-    userId, // your live Clerk id — used to debug data scoping
+    userId,
     hasConnections: (count ?? 0) > 0,
     connectionCount: count ?? 0,
-    messagesMode: settings?.messages_mode ?? "none",
+    messagesMode: mode,
+    _debug: {
+      supabaseHost: url.replace(/^https?:\/\//, "").split(".")[0], // project ref only
+      serviceKeyLen: svc.length,
+      queryError,
+    },
   });
 }
