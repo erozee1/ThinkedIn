@@ -16,6 +16,7 @@ import type { EnrichmentProgress } from "@/lib/types";
 
 const CONNECTION_COUNT = 120;
 import GlassButton from "@/components/GlassButton";
+import SiteMast from "@/components/SiteMast";
 
 const LINKEDIN_EXPORT_URL =
   "https://www.linkedin.com/mypreferences/d/download-my-data";
@@ -79,10 +80,13 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
   }, [step, job]);
 
   return (
-    <main className="relative flex h-dvh w-full items-center justify-center overflow-hidden px-4">
+    <main className="relative flex h-dvh w-full flex-col overflow-hidden">
       <div className="aurora" aria-hidden />
 
-      <div className="relative z-10 w-full max-w-xl">
+      <SiteMast />
+
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4">
+        <div className="w-full max-w-xl">
         <AnimatePresence mode="wait">
           {step === "import" && (
             <Stage key="import">
@@ -205,6 +209,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
             </Stage>
           )}
         </AnimatePresence>
+        </div>
       </div>
     </main>
   );

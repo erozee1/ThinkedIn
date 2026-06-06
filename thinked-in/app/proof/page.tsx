@@ -1,5 +1,4 @@
-import Image from "next/image";
-import logo from "@/public/thinkedinBACK.png";
+import SiteMast from "@/components/SiteMast";
 
 const phases = [
   {
@@ -137,19 +136,7 @@ const colorMap = {
 export default function ResearchPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Masthead — matches landing */}
-      <header className="relative flex items-center px-6 py-4 sm:px-8">
-        <div
-          aria-hidden
-          className="absolute inset-x-0 top-0 h-[80px] border-b border-black/10 bg-white shadow-sm"
-        />
-        <Image
-          src={logo}
-          alt="thinkedin"
-          priority
-          className="relative h-10 w-auto -translate-y-1 sm:h-12"
-        />
-      </header>
+      <SiteMast />
 
       <div className="mx-auto max-w-2xl px-8 pb-24 pt-10">
 

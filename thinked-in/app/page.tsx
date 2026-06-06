@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import BackgroundFX from "@/components/BackgroundFX";
-import SiteMast from "@/components/landing/SiteMast";
+import SiteMast from "@/components/SiteMast";
 import LandingHero from "@/components/landing/LandingHero";
 
 export default async function Home() {
