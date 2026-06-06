@@ -37,7 +37,10 @@ export interface Connection {
 export type ProfileCardData = Pick<
   Connection,
   "id" | "name" | "position" | "company" | "location" | "avatarUrl" | "linkedinUrl"
->;
+> & {
+  /** True when the connection belongs to an org team member rather than the requesting user. */
+  fromTeam?: boolean;
+};
 
 export type ChatRole = "user" | "assistant";
 

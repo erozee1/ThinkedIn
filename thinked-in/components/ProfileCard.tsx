@@ -34,7 +34,14 @@ export default function ProfileCard({
         unoptimized
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-foreground">{person.name}</p>
+        <div className="flex items-center gap-2">
+          <p className="truncate font-medium text-foreground">{person.name}</p>
+          {person.fromTeam ? (
+            <span className="shrink-0 rounded-full bg-[#0a66c2]/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#0a66c2]">
+              Team
+            </span>
+          ) : null}
+        </div>
         <p className="truncate text-sm text-muted">
           {person.position}
           {person.company ? ` · ${person.company}` : ""}
