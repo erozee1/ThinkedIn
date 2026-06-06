@@ -177,7 +177,7 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
           <Image src={logo} alt="thinkedin" className="h-6 w-auto" />
         </div>
 
-        <BackgroundFX />
+        <BackgroundFX light />
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           {active.messages.length === 0 ? (
             <EmptyState
