@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { useUser } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
 import type { ChatMessage, ChatSession, ProfileCardData } from "@/lib/types";
@@ -165,23 +166,36 @@ function EmptyState({
 }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-      <h1 className="text-3xl font-semibold text-white drop-shadow-[0_2px_10px_rgba(12,74,140,0.4)]">
+      <motion.h1
+        className="text-3xl font-semibold text-white drop-shadow-[0_2px_10px_rgba(12,74,140,0.4)]"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
         {name ? `Hi ${name}, ` : "Hi, "}
         <span className="text-white/85">talk to your network</span>
-      </h1>
-      <p className="mt-2 max-w-md text-white/85 drop-shadow-[0_1px_8px_rgba(12,74,140,0.35)]">
+      </motion.h1>
+      <motion.p
+        className="mt-2 max-w-md text-white/85 drop-shadow-[0_1px_8px_rgba(12,74,140,0.35)]"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut", delay: 0.08 }}
+      >
         Ask in plain English and I&apos;ll find the right people from your LinkedIn
         connections.
-      </p>
+      </motion.p>
       <div className="mt-7 flex flex-wrap justify-center gap-2">
-        {EXAMPLE_PROMPTS.map((p) => (
-          <button
+        {EXAMPLE_PROMPTS.map((p, i) => (
+          <motion.button
             key={p}
             onClick={() => onPick(p)}
             className="rounded-full border border-border bg-surface px-4 py-2 text-sm text-foreground shadow-sm transition-all hover:scale-[1.03] hover:bg-black/[0.04] hover:shadow active:scale-95"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut", delay: 0.18 + i * 0.07 }}
           >
             {p}
-          </button>
+          </motion.button>
         ))}
       </div>
     </div>

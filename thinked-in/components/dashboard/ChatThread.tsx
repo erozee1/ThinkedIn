@@ -28,18 +28,28 @@ export default function ChatThread({ messages }: { messages: ChatMessage[] }) {
 function MessageBubble({ message }: { message: ChatMessage }) {
   if (message.role === "user") {
     return (
-      <div className="flex justify-end">
+      <motion.div
+        className="flex justify-end"
+        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.28, ease: "easeOut" }}
+      >
         <div className="max-w-[80%] rounded-3xl rounded-br-lg bg-gradient-blue px-5 py-3 text-[15px] text-white shadow-sm">
           {message.content}
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   const showThinking = message.pending && !message.content;
 
   return (
-    <div className="flex items-start gap-3">
+    <motion.div
+      className="flex items-start gap-3"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: "easeOut" }}
+    >
       <div className="min-w-0 flex-1">
         {showThinking ? (
           <ThinkingDots label="thinkedin is searching your network" />
@@ -64,7 +74,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

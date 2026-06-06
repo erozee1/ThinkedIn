@@ -13,13 +13,15 @@ import type { Connection } from "@/lib/types";
 //   {"type":"delta","text":"..."}        (many)
 const GEMINI_MODEL = "gemini-3.1-flash-lite";
 
+// Pace the visible stream (ms between words) so the reply types out slowly.
+const TYPING_DELAY_MS = 55;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 const SYSTEM_INSTRUCTION =
-  "You are thinkedin, an assistant that helps a user search and understand their " +
-  "professional (LinkedIn) network. Be concise and specific. Reference the provided " +
-  "connections by name, explain briefly why each is relevant, and suggest an intro " +
-  "angle when useful. If no connections are provided, say you couldn't find a match. " +
-  "Keep it short. Write in short flowing sentences — do NOT use markdown bullet lists, " +
-  "headers, or tables. You may use **bold** for people's names.";
+  "You are thinkedin, which helps a user search their LinkedIn network. " +
+  "Answer in AT MOST two short sentences — be extremely concise. Name the 1-3 best " +
+  "matches with their names in **bold** and one quick reason each. No lists, no " +
+  "headers, no preamble or sign-off. If nothing matches, say so in one sentence.";
 
 interface HistoryItem {
   role: "user" | "assistant";
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
         // Fall back to the deterministic mock reply so chat never dead-ends.
         for (const token of reply.match(/\S+\s*/g) ?? [reply]) {
           send({ type: "delta", text: token });
-          await new Promise((r) => setTimeout(r, 18));
+          await sleep(TYPING_DELAY_MS);
         }
       }
       controller.close();
@@ -127,7 +129,11 @@ async function streamGemini({
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
       contents,
-      generationConfig: { thinkingConfig: { thinkingBudget: 0 } },
+      generationConfig: {
+        thinkingConfig: { thinkingBudget: 0 },
+        maxOutputTokens: 110,
+        temperature: 0.5,
+      },
     }),
   });
 
@@ -135,11 +141,11 @@ async function streamGemini({
     throw new Error(`Gemini request failed: ${res.status}`);
   }
 
-  // Parse the SSE stream: lines of `data: { ...candidates... }`.
+  // Parse the SSE stream and accumulate the (short) reply.
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
-  let emitted = false;
+  let fullText = "";
 
   while (true) {
     const { done, value } = await reader.read();
@@ -158,13 +164,16 @@ async function streamGemini({
       const json = JSON.parse(payload);
       const parts = json?.candidates?.[0]?.content?.parts ?? [];
       for (const part of parts) {
-        if (typeof part?.text === "string" && !part.thought) {
-          onText(part.text);
-          emitted = true;
-        }
+        if (typeof part?.text === "string" && !part.thought) fullText += part.text;
       }
     }
   }
 
-  if (!emitted) throw new Error("Gemini returned no text");
+  if (!fullText.trim()) throw new Error("Gemini returned no text");
+
+  // Type it out slowly, word-by-word (whole text → clean spacing).
+  for (const token of fullText.match(/\S+\s*/g) ?? [fullText]) {
+    onText(token);
+    await sleep(TYPING_DELAY_MS);
+  }
 }
