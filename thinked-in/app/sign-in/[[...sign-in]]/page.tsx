@@ -17,7 +17,12 @@ export default function SignInPage() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.45, ease: "easeOut" }}
         >
-          <SignIn />
+          <SignIn
+            fallbackRedirectUrl="/dashboard"
+            forceRedirectUrl="/dashboard"
+            signUpFallbackRedirectUrl="/dashboard"
+            signUpForceRedirectUrl="/dashboard"
+          />
         </motion.div>
       </div>
     </main>
