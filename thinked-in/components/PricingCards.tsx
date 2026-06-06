@@ -141,11 +141,20 @@ export default function PricingCards() {
           </ul>
 
           <div className="mt-8">
-            <CheckoutButton planId={planId} planPeriod={planPeriod}>
-              <button className="flex w-full items-center justify-center rounded-full bg-[#0a66c2] py-2.5 text-sm font-semibold text-white shadow transition hover:bg-[#004182] active:scale-[0.98]">
-                {isSignedIn ? "Upgrade to Pro" : "Start Pro"}
-              </button>
-            </CheckoutButton>
+            {isSignedIn ? (
+              <CheckoutButton planId={planId} planPeriod={planPeriod}>
+                <button className="flex w-full items-center justify-center rounded-full bg-[#0a66c2] py-2.5 text-sm font-semibold text-white shadow transition hover:bg-[#004182] active:scale-[0.98]">
+                  Upgrade to Pro
+                </button>
+              </CheckoutButton>
+            ) : (
+              <Link
+                href={`/sign-up?redirect_url=/pricing`}
+                className="flex w-full items-center justify-center rounded-full bg-[#0a66c2] py-2.5 text-sm font-semibold text-white shadow transition hover:bg-[#004182] active:scale-[0.98]"
+              >
+                Start Pro
+              </Link>
+            )}
           </div>
         </div>
       </div>
