@@ -103,59 +103,87 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
         <AnimatePresence mode="wait">
           {step === "import" && (
             <Stage key="import">
-              <AssistantBubble>
-                <p className="text-foreground">
-                  Let&apos;s get your LinkedIn data. Request your export here:
+              <div className="rounded-3xl glass-strong p-7">
+                <h2 className="text-base font-semibold text-foreground">
+                  Get your LinkedIn data
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  Takes about 10–30 minutes. Follow these steps exactly.
                 </p>
-                <a
-                  href={LINKEDIN_EXPORT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-flex items-center gap-1 break-all text-sm font-medium text-cyan-glow underline-offset-2 hover:underline"
-                >
-                  linkedin.com/mypreferences/d/download-my-data
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </a>
-                <p className="mt-2 text-sm text-muted">
-                  It&apos;ll take up to 15 minutes to arrive. When it does, just drag
-                  it in here.
-                </p>
-              </AssistantBubble>
 
-              <label
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragging(true);
-                }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={onDrop}
-                className={`mt-5 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed px-6 py-12 text-center transition-colors ${
-                  dragging
-                    ? "border-[#0a66c2] bg-[#0a66c2]/5"
-                    : "border-border bg-surface hover:bg-[#f2f4f6]"
-                }`}
-              >
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept=".zip,.csv"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) acceptFile(file);
+                <ol className="mt-6 space-y-5">
+                  <ImportStep num={1} title="Open LinkedIn data settings">
+                    <a
+                      href={LINKEDIN_EXPORT_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#0a66c2] px-4 py-1.5 text-xs font-semibold text-white transition-all hover:brightness-110 active:scale-95"
+                    >
+                      Open LinkedIn settings
+                      <ArrowRight className="h-3 w-3" />
+                    </a>
+                    <p className="mt-2 text-xs text-muted">
+                      You&apos;ll land on <span className="text-foreground">Settings → Data Privacy → Get a copy of your data</span>
+                    </p>
+                  </ImportStep>
+
+                  <div className="ml-[22px] h-px bg-border" />
+
+                  <ImportStep num={2} title="Request a new archive">
+                    <p className="mt-1 text-xs text-muted">
+                      Click{" "}
+                      <span className="font-semibold text-foreground">&ldquo;Request new archive&rdquo;</span>
+                      , then select{" "}
+                      <span className="font-semibold text-foreground">&ldquo;Download larger data archive&rdquo;</span>
+                      {" "}and click{" "}
+                      <span className="font-semibold text-foreground">&ldquo;Request archive&rdquo;</span>.
+                    </p>
+                    <p className="mt-1.5 text-xs text-muted">
+                      This includes your connections and messages — don&apos;t select individual files.
+                    </p>
+                  </ImportStep>
+
+                  <div className="ml-[22px] h-px bg-border" />
+
+                  <ImportStep num={3} title="Wait for the email, then drop the .zip here">
+                    <p className="mt-1 text-xs text-muted">
+                      LinkedIn sends a download link to your email when the archive is ready.
+                    </p>
+                  </ImportStep>
+                </ol>
+
+                <label
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragging(true);
                   }}
-                />
-                <UploadCloud className="h-9 w-9 text-[#0a66c2]" />
-                <div>
-                  <p className="font-medium text-foreground">
-                    Drop your LinkedIn export here
-                  </p>
-                  <p className="text-sm text-muted">
-                    The whole .zip — we&apos;ll pull out Connections.csv &amp;
-                    messages.csv
-                  </p>
-                </div>
-              </label>
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={onDrop}
+                  className={`mt-6 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-8 text-center transition-colors ${
+                    dragging
+                      ? "border-[#0a66c2] bg-[#0a66c2]/5"
+                      : "border-border bg-black/[0.02] hover:bg-[#f2f4f6]"
+                  }`}
+                >
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    accept=".zip"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) acceptFile(file);
+                    }}
+                  />
+                  <UploadCloud className={`h-7 w-7 transition-colors ${dragging ? "text-[#0a66c2]" : "text-muted"}`} />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Drop your .zip here
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted">or click to browse</p>
+                  </div>
+                </label>
+              </div>
             </Stage>
           )}
 
@@ -286,11 +314,17 @@ function Stage({ children, ...rest }: { children: React.ReactNode; key?: string 
   );
 }
 
-function AssistantBubble({ children }: { children: React.ReactNode }) {
+function ImportStep({ num, title, children }: { num: number; title: string; children?: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="rounded-3xl rounded-tl-lg glass-strong px-5 py-4">{children}</div>
-    </div>
+    <li className="flex items-start gap-3.5">
+      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0a66c2] text-[11px] font-bold text-white">
+        {num}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        {children}
+      </div>
+    </li>
   );
 }
 
