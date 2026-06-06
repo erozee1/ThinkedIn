@@ -12,7 +12,11 @@ export function loadSessions(): ChatSession[] {
     const raw = localStorage.getItem(KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as ChatSession[]) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((s) => ({
+      ...s,
+      messages: Array.isArray(s?.messages) ? s.messages : [],
+    })) as ChatSession[];
   } catch {
     return [];
   }
