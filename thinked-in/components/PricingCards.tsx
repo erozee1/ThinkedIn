@@ -73,7 +73,7 @@ export default function PricingCards() {
 
         {/* Free */}
         <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Free</p>
+          <p className="text-2xl font-semibold text-zinc-800">Free</p>
           <div className="mt-3 flex items-end gap-1">
             <span className="text-4xl font-semibold tracking-tight text-zinc-900">£0</span>
             <span className="mb-1 text-sm text-zinc-400">/ month</span>
@@ -91,7 +91,7 @@ export default function PricingCards() {
             ))}
           </ul>
 
-          <div className="mt-8">
+          <div className="mt-auto pt-8">
             {isSignedIn ? (
               <Link
                 href="/dashboard"
@@ -117,7 +117,7 @@ export default function PricingCards() {
             Most popular
           </span>
 
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#0a66c2]">Pro</p>
+          <p className="text-2xl font-semibold text-[#0a66c2]">Pro</p>
           <div className="mt-3 flex items-end gap-1">
             <span className="text-4xl font-semibold tracking-tight text-zinc-900">
               {annual ? "£8" : "£10"}
@@ -140,7 +140,7 @@ export default function PricingCards() {
             ))}
           </ul>
 
-          <div className="mt-8">
+          <div className="mt-auto pt-8">
             {isSignedIn ? (
               <CheckoutButton planId={planId} planPeriod={planPeriod}>
                 <button className="flex w-full items-center justify-center rounded-full bg-[#0a66c2] py-2.5 text-sm font-semibold text-white shadow transition hover:bg-[#004182] active:scale-[0.98]">
