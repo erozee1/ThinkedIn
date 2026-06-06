@@ -178,3 +178,41 @@ create policy "own actions" on network_actions for all
   to authenticated
   using ((select auth.jwt() ->> 'sub') = user_id)
   with check ((select auth.jwt() ->> 'sub') = user_id);
+
+-- ── Extension auth tokens (long-lived bearer for the Chrome extension) ─────────
+-- Read/written only via the service-role key. We store a sha256 hash, never the raw token.
+create table if not exists extension_tokens (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null,
+  token_hash text not null unique,
+  label text,
+  created_at timestamptz not null default now(),
+  last_used_at timestamptz,
+  revoked_at timestamptz
+);
+create index if not exists extension_tokens_user_idx on extension_tokens (user_id);
+alter table extension_tokens enable row level security;  -- no client policy: service-role only
+
+-- ── Raw LinkedIn observation events captured by the extension ──────────────────
+create table if not exists linkedin_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null,
+  kind text not null,                 -- 'profile_view' (MVP); 'connection_seen' / 'message_seen' later
+  linkedin_url text,                  -- normalized (linkedin.com/in/<slug>)
+  payload jsonb,
+  connection_id uuid references connections(id) on delete set null,
+  freshened boolean not null default false,  -- true when it matched + refreshed a connection
+  observed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists linkedin_events_user_time on linkedin_events (user_id, observed_at desc);
+create index if not exists linkedin_events_user_fresh on linkedin_events (user_id, kind, freshened);
+alter table linkedin_events enable row level security;
+drop policy if exists "own events" on linkedin_events;
+create policy "own events" on linkedin_events for all
+  to authenticated
+  using ((select auth.jwt() ->> 'sub') = user_id)
+  with check ((select auth.jwt() ->> 'sub') = user_id);
+
+-- When a connection was last refreshed by the extension (profile view).
+alter table connections add column if not exists freshened_at timestamptz;
