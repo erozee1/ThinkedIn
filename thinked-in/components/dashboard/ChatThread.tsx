@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, Hash, Users, BarChart2, Loader2, Target } from "lucide-react";
+import { Search, Filter, Globe, Hash, Users, BarChart2, Loader2, Target } from "lucide-react";
 import type { ChatMessage } from "@/lib/types";
 import ProfileCard from "@/components/ProfileCard";
 import PostCard from "@/components/dashboard/PostCard";
@@ -119,6 +119,7 @@ const TOOL_META: Record<string, { label: string; Icon: React.ElementType }> = {
   present_connections: { label: "Selected connections", Icon: Users },
   get_network_stats:   { label: "Analysed network",     Icon: BarChart2 },
   save_goal:           { label: "Goal saved",            Icon: Target },
+  web_search:          { label: "Web search",            Icon: Globe },
 };
 
 function ThinkingStep({ message }: { message: ChatMessage }) {
