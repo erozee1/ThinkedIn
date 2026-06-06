@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
@@ -11,10 +10,7 @@ import {
   ShieldCheck,
   UploadCloud,
 } from "lucide-react";
-import { generateEnrichmentRoster, type RosterPerson } from "@/lib/mock-data";
-import type { EnrichmentProgress } from "@/lib/types";
-
-const CONNECTION_COUNT = 120;
+import type { EnrichmentProgress, UploadPreviewPerson, UploadResponse } from "@/lib/types";
 import GlassButton from "@/components/GlassButton";
 import SiteMast from "@/components/SiteMast";
 
@@ -29,7 +25,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
   const [dragging, setDragging] = useState(false);
   const [job, setJob] = useState<{ jobId: string; total: number } | null>(null);
   const [progress, setProgress] = useState<EnrichmentProgress | null>(null);
-  const [roster, setRoster] = useState<RosterPerson[]>([]);
+  const [roster, setRoster] = useState<UploadPreviewPerson[]>([]);
+  const [hasMessagesFile, setHasMessagesFile] = useState(false);
   const fileRef = useRef<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -47,12 +44,24 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
   };
 
   const startEnrichment = useCallback(async () => {
-    setRoster(generateEnrichmentRoster(CONNECTION_COUNT));
+    setRoster([]);
+    setHasMessagesFile(false);
+    setProgress(null);
+    setJob(null);
     setStep("enriching");
     const form = new FormData();
     if (fileRef.current) form.append("file", fileRef.current);
     const res = await fetch("/api/upload", { method: "POST", body: form });
-    const data = (await res.json()) as { jobId: string; totalConnections: number };
+    const data = (await res.json()) as UploadResponse;
+    setRoster(data.previewConnections);
+    setHasMessagesFile(data.hasMessagesFile);
+    setProgress({
+      jobId: data.jobId,
+      total: data.totalConnections,
+      enrichedCount: 0,
+      ratio: 0,
+      status: "processing_connections",
+    });
     setJob({ jobId: data.jobId, total: data.totalConnections });
   }, []);
 
@@ -166,13 +175,12 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                 )}
 
                 <p className="mt-4 text-sm leading-relaxed text-muted">
-                  We&apos;ll be using{" "}
+                  We&apos;ll use{" "}
                   <span className="font-medium text-foreground">Connections.csv</span>{" "}
-                  and{" "}
+                  to build your private network and, if it&apos;s present,{" "}
                   <span className="font-medium text-foreground">messages.csv</span>{" "}
-                  from your export to build your private network. Everything will be{" "}
-                  <span className="font-medium text-foreground">deleted afterwards</span>{" "}
-                  — nothing is stored or shared.
+                  for relationship signals. Your import stays private to your account
+                  and isn&apos;t shared.
                 </p>
 
                 <div className="mt-6 flex items-center justify-end gap-3">
@@ -205,6 +213,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                 ready={step === "ready"}
                 onLetsChat={onComplete}
                 roster={roster}
+                hasMessagesFile={hasMessagesFile}
               />
             </Stage>
           )}
@@ -244,17 +253,22 @@ function EnrichmentPanel({
   ready,
   onLetsChat,
   roster,
+  hasMessagesFile,
 }: {
   progress: EnrichmentProgress | null;
   ready: boolean;
   onLetsChat: () => void;
-  roster: RosterPerson[];
+  roster: UploadPreviewPerson[];
+  hasMessagesFile: boolean;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
-  const total = roster.length;
+  const total = progress?.total ?? roster.length;
   const ratio = ready ? 1 : progress?.ratio ?? 0;
   const revealed = Math.min(total, Math.ceil(total * ratio));
   const people = roster.slice(0, revealed);
+  const isPreparing = !progress;
+  const isProcessingMessages = progress?.status === "processing_messages";
+  const hasFailed = progress?.status === "failed";
 
   // Follow the list as new connections stream in.
   useEffect(() => {
@@ -266,21 +280,43 @@ function EnrichmentPanel({
     <div className="rounded-3xl glass-strong p-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          {ready ? null : (
+          {ready || hasFailed ? null : (
             <Loader2 className="h-6 w-6 animate-spin text-[#0a66c2]" />
           )}
           <div>
             <p className="font-semibold text-foreground">
-              {ready ? "Your network is ready" : "Enriching via Apify…"}
+              {ready
+                ? "Your network is ready"
+                : hasFailed
+                  ? "Import failed"
+                  : isPreparing
+                    ? "Reading your LinkedIn export..."
+                    : isProcessingMessages
+                      ? "Processing message history..."
+                      : "Importing your network..."}
             </p>
             <p className="text-sm text-muted">
               {ready
-                ? `${total} connections enriched`
-                : `${revealed}/${total} connections`}
+                ? `${total} connections imported`
+                : hasFailed
+                  ? "We couldn't finish saving this export."
+                  : isPreparing
+                    ? "Parsing Connections.csv"
+                    : isProcessingMessages
+                      ? "Connections imported. Updating relationship signals from messages.csv"
+                      : `${revealed}/${total} connections processed`}
             </p>
           </div>
         </div>
       </div>
+
+      {hasMessagesFile && !isPreparing && !ready && !hasFailed && (
+        <p className="mt-3 text-xs text-muted">
+          {isProcessingMessages
+            ? "`messages.csv` detected. Matching conversations to your current connections."
+            : "`messages.csv` detected. Message history will be used for relationship signals."}
+        </p>
+      )}
 
       {/* progress bar */}
       <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-black/10">
@@ -297,27 +333,44 @@ function EnrichmentPanel({
         className="scroll-slim mt-5 flex max-h-64 flex-col gap-2 overflow-y-auto scroll-smooth"
       >
         <AnimatePresence initial={false}>
+          {isPreparing && (
+            <motion.div
+              key="preparing"
+              initial={{ opacity: 0, x: -24, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3 py-2"
+            >
+              <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#0a66c2]/10 text-xs font-semibold text-[#0a66c2]">
+                ZIP
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-foreground">
+                  Inspecting export contents
+                </p>
+                <p className="truncate text-xs text-muted">
+                  Looking for `Connections.csv` and `messages.csv`
+                </p>
+              </div>
+            </motion.div>
+          )}
           {people.map((person, i) => (
             <motion.div
-              key={i}
+              key={`${person.name}-${i}`}
               initial={{ opacity: 0, x: -24, scale: 0.9 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               transition={{ type: "spring", stiffness: 340, damping: 26 }}
               className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3 py-2"
             >
-              <Image
-                src={person.avatarUrl}
-                alt={person.name}
-                width={34}
-                height={34}
-                className="rounded-full ring-2 ring-black/5"
-                unoptimized
-              />
+              <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#0a66c2]/10 text-xs font-semibold text-[#0a66c2] ring-2 ring-black/5">
+                {person.initials}
+              </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-foreground">
                   {person.name}
                 </p>
-                <p className="truncate text-xs text-muted">{person.role}</p>
+                <p className="truncate text-xs text-muted">
+                  {person.detail ?? "No role data in export"}
+                </p>
               </div>
             </motion.div>
           ))}

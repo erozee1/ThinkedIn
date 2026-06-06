@@ -2,13 +2,35 @@ import { type NextRequest, after } from "next/server";
 import { strFromU8, unzipSync } from "fflate";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { parseConnections } from "@/lib/data/connections";
-import { processConnections, processMessages } from "@/lib/ingest/process";
+import { connectionSourceKey, parseConnections } from "@/lib/data/connections";
+import { clearStoredMessages, processConnections, processMessages } from "@/lib/ingest/process";
+import type { UploadPreviewPerson, UploadResponse } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
 type Mode = "full" | "metadata" | "none";
+
+function toPreviewPerson(connection: ReturnType<typeof parseConnections>[number]): UploadPreviewPerson {
+  const name = [connection.firstName, connection.lastName].filter(Boolean).join(" ").trim();
+  const initials = [connection.firstName, connection.lastName]
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("")
+    .slice(0, 2);
+
+  let detail: string | null = null;
+  if (connection.position && connection.company) detail = `${connection.position} @ ${connection.company}`;
+  else if (connection.position) detail = connection.position;
+  else if (connection.company) detail = connection.company;
+  else if (connection.connectedOn) detail = `Connected on ${connection.connectedOn}`;
+
+  return {
+    name,
+    detail,
+    initials: initials || "?",
+  };
+}
 
 // Pull Connections.csv (required) and messages.csv (optional) out of either a
 // raw .csv upload or the LinkedIn export .zip. File is parsed in memory only.
@@ -58,8 +80,17 @@ export async function POST(request: NextRequest) {
   }
 
   let total = 0;
+  let previewConnections: UploadPreviewPerson[] = [];
   try {
-    total = parseConnections(connectionsCsv).length;
+    const parsedConnections = parseConnections(connectionsCsv);
+    const uniqueConnections = new Map<string, (typeof parsedConnections)[number]>();
+    for (const connection of parsedConnections) {
+      const key = connectionSourceKey(connection);
+      if (!key) continue;
+      uniqueConnections.set(key, connection);
+    }
+    previewConnections = Array.from(uniqueConnections.values()).map(toPreviewPerson);
+    total = previewConnections.length;
     console.log(`[UPLOAD] parsed ${total} connections`);
   } catch (e) {
     console.error("[UPLOAD] parseConnections failed:", e);
@@ -88,7 +119,7 @@ export async function POST(request: NextRequest) {
 
   const { data: job, error: jobErr } = await supa
     .from("upload_jobs")
-    .insert({ user_id: userId, total_connections: total, enriched_count: 0, status: "processing" })
+    .insert({ user_id: userId, total_connections: total, enriched_count: 0, status: "processing_connections" })
     .select("id")
     .single();
   if (jobErr || !job) {
@@ -105,9 +136,14 @@ export async function POST(request: NextRequest) {
       await processConnections(supa, userId, connCsv, job.id);
       console.log(`[UPLOAD:BG] processConnections complete`);
       if (msgCsv && mode !== "none") {
+        await supa.from("upload_jobs").update({ status: "processing_messages", updated_at: new Date().toISOString() }).eq("id", job.id);
         console.log(`[UPLOAD:BG] starting processMessages mode=${mode}`);
         await processMessages(supa, userId, msgCsv, mode);
         console.log(`[UPLOAD:BG] processMessages complete`);
+        await supa.from("user_settings").update({ messages_ingested_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("user_id", userId);
+      } else {
+        await clearStoredMessages(supa, userId);
+        await supa.from("user_settings").update({ messages_ingested_at: null, updated_at: new Date().toISOString() }).eq("user_id", userId);
       }
       await supa.from("upload_jobs").update({ status: "complete", enriched_count: total, updated_at: new Date().toISOString() }).eq("id", job.id);
       console.log(`[UPLOAD:BG] job marked complete`);
@@ -119,6 +155,13 @@ export async function POST(request: NextRequest) {
     }
   });
 
+  const response: UploadResponse = {
+    jobId: job.id,
+    totalConnections: total,
+    hasMessagesFile: Boolean(messagesCsv),
+    previewConnections,
+  };
+
   console.log(`[UPLOAD] response sent — jobId=${job.id} total=${total}`);
-  return Response.json({ jobId: job.id, totalConnections: total });
+  return Response.json(response);
 }

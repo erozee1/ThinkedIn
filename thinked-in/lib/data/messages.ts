@@ -1,5 +1,5 @@
 import Papa from "papaparse";
-import { firstUrl } from "./url";
+import { firstUrl, normalizeLinkedInUrl } from "./url";
 import type { ParsedMessage } from "./types";
 
 const clean = (v: string | undefined): string | null => {
@@ -14,6 +14,37 @@ export function parseMessageDate(raw: string | null | undefined): Date | null {
   const iso = s.replace(" UTC", "Z").replace(" ", "T");
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function keyPart(value: string | null | undefined): string {
+  return (value ?? "").trim().toLowerCase();
+}
+
+function isoPart(value: Date | string | null | undefined): string {
+  if (!value) return "";
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? "" : value.toISOString();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? keyPart(value) : parsed.toISOString();
+}
+
+export function messageSourceKey(input: {
+  conversationId: string | null | undefined;
+  direction: "sent" | "received";
+  partnerName: string | null | undefined;
+  partnerProfileUrl: string | null | undefined;
+  sentAt: Date | string | null | undefined;
+  subject: string | null | undefined;
+  content: string | null | undefined;
+}): string {
+  return [
+    keyPart(input.conversationId),
+    input.direction,
+    normalizeLinkedInUrl(input.partnerProfileUrl) ?? "",
+    keyPart(input.partnerName),
+    isoPart(input.sentAt),
+    keyPart(input.subject),
+    keyPart(input.content),
+  ].join("|");
 }
 
 interface RawMessageRow {

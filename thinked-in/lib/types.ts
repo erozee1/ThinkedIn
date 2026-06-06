@@ -94,7 +94,7 @@ export interface EnrichmentProgress {
   jobId: string;
   total: number;
   enrichedCount: number;
-  /** Smooth 0..1 progress (time-based), independent of `total`. */
+  /** 0..1 progress based on imported connection rows. */
   ratio: number;
-  status: "processing" | "complete" | "failed";
+  status: "processing_connections" | "processing_messages" | "complete" | "failed";
 }

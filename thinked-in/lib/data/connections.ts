@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 import type { RawConnection } from "./types";
+import { normalizeLinkedInUrl } from "./url";
 
 const clean = (v: string | undefined): string | null => {
   const s = (v ?? "").trim();
@@ -19,6 +20,29 @@ function fallbackUrl(first: string | null, last: string | null): string | null {
     .trim()
     .replace(/\s+/g, "-");
   return slug ? `https://linkedin.com/in/${slug}` : null;
+}
+
+function fallbackIdentity(first: string | null | undefined, last: string | null | undefined): string | null {
+  const slug = [first, last]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+  return slug || null;
+}
+
+export function connectionSourceKey(input: {
+  linkedinUrl: string | null | undefined;
+  firstName: string | null | undefined;
+  lastName: string | null | undefined;
+}): string | null {
+  const normalizedUrl = normalizeLinkedInUrl(input.linkedinUrl);
+  if (normalizedUrl) return `linkedin:${normalizedUrl}`;
+
+  const fallback = fallbackIdentity(input.firstName, input.lastName);
+  return fallback ? `name:${fallback}` : null;
 }
 
 /**
