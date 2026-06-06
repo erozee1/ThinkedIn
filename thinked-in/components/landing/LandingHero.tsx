@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import logo from "@/public/thinkedinbig.png";
+import logo from "@/public/thinkedinBACK.png";
 import GetStartedBubble from "./GetStartedBubble";
 import MockChatWindow from "./MockChatWindow";
 
