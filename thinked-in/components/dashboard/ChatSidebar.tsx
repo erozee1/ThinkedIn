@@ -4,13 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import logo from "@/public/thinkedinBACK.png";
-import { MessagesSquare, Plus, RotateCcw, Settings, Sparkles, X } from "lucide-react";
+import { MessagesSquare, Plus, RotateCcw, Settings, Sparkles, Trash2, X } from "lucide-react";
 import type { ChatSession } from "@/lib/types";
 
 interface ChatSidebarProps {
   sessions: ChatSession[];
   activeId: string | null;
   onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
   onNewChat: () => void;
   onReimport: () => void;
   /** Mobile drawer open state. */
@@ -22,6 +23,7 @@ export default function ChatSidebar({
   sessions,
   activeId,
   onSelect,
+  onDelete,
   onNewChat,
   onReimport,
   open,
@@ -79,18 +81,32 @@ export default function ChatSidebar({
         </p>
         <div className="flex flex-col gap-0.5">
           {sessions.map((s) => (
-            <button
+            <div
               key={s.id}
-              onClick={() => select(s.id)}
-              className={`flex items-center gap-2 truncate rounded-lg px-2.5 py-2 text-left text-sm transition-all active:scale-[0.98] ${
+              className={`group flex items-center gap-2 rounded-lg px-2 py-1 text-left text-sm transition-all ${
                 s.id === activeId
                   ? "bg-[#0a66c2]/10 font-medium text-[#0a66c2]"
                   : "text-muted hover:bg-black/[0.04] hover:text-foreground"
               }`}
             >
-              <MessagesSquare className="h-3.5 w-3.5 shrink-0 opacity-70" />
-              <span className="truncate">{s.title}</span>
-            </button>
+              <button
+                onClick={() => select(s.id)}
+                className="flex min-w-0 flex-1 items-center gap-2 truncate rounded-md px-0.5 py-1 active:scale-[0.98]"
+              >
+                <MessagesSquare className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                <span className="truncate">{s.title}</span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(s.id);
+                }}
+                aria-label={`Delete chat ${s.title}`}
+                className="rounded-md p-1 text-muted opacity-0 transition hover:bg-black/[0.06] hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
           ))}
         </div>
       </div>
@@ -105,7 +121,7 @@ export default function ChatSidebar({
           className="mb-1 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted transition-all hover:bg-black/[0.04] hover:text-foreground active:scale-[0.98]"
         >
           <RotateCcw className="h-4 w-4" />
-          Re-import network
+          Update network
         </button>
         <Link
           href="/billing"

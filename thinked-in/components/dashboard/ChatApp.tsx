@@ -85,6 +85,19 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
     setActiveId(s.id);
   };
 
+  const handleDeleteChat = (id: string) => {
+    setState((st) => {
+      const remaining = st.sessions.filter((session) => session.id !== id);
+      const sessions = remaining.length ? remaining : [newSession()];
+      const activeStillExists = sessions.some((session) => session.id === st.activeId);
+      const activeId = activeStillExists
+        ? st.activeId
+        : sessions[0]?.id ?? newSession().id;
+
+      return { sessions, activeId };
+    });
+  };
+
   const sendMessage = async (text: string) => {
     if (streaming) return;
     const assistantId = uid();
@@ -144,6 +157,7 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
         sessions={sessions}
         activeId={activeId}
         onSelect={setActiveId}
+        onDelete={handleDeleteChat}
         onNewChat={handleNewChat}
         onReimport={onReimport}
         open={navOpen}
