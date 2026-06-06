@@ -125,7 +125,7 @@ export default function PricingCards() {
             <p className="mt-0.5 text-xs text-emerald-600 font-medium">£96 billed annually — save £24</p>
           )}
           <p className="mt-2 text-sm text-zinc-500">
-            For power users and professionals.
+            For power users and professionals. Refund anytime, no questions asked.
           </p>
 
           <ul className="mt-6 flex flex-col gap-2.5">

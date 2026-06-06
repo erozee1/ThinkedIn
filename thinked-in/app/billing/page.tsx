@@ -6,9 +6,15 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import logo from "@/public/thinkedinBACK.png";
 
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@thinkedin.ai";
+
 export default async function BillingPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
+
+  const refundMailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Refund request")}&body=${encodeURIComponent(
+    "Hi,\n\nI'd like a refund for my thinkedin subscription.\n\nNo questions asked.\n",
+  )}`;
 
   return (
     <div className="min-h-screen bg-white">
@@ -58,6 +64,25 @@ export default async function BillingPage() {
               View subscription details
             </button>
           </SubscriptionDetailsButton>
+        </div>
+
+        <div className="mb-8 rounded-xl border border-[#0a66c2]/12 bg-[#0a66c2]/[0.03] px-5 py-5">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-[#0a66c2]">
+            Refunds
+          </p>
+          <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
+            No questions asked money back
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+            If you want a refund, email us and we&apos;ll sort it out. No back and
+            forth.
+          </p>
+          <a
+            href={refundMailto}
+            className="mt-4 inline-flex items-center justify-center rounded-full bg-[#0a66c2] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#004182] active:scale-[0.98]"
+          >
+            Email for a refund
+          </a>
         </div>
 
         {/* Change plan */}
