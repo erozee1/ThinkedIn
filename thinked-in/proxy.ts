@@ -2,7 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // "/" is the public marketing landing (signed-out hero → "Get started").
 // Everything else (e.g. /dashboard, /api/*) stays protected.
-const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)", "/proof", "/research", "/pricing", "/auth-debug", "/api/debug"]);
+const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)", "/proof", "/research", "/pricing", "/api/debug"]);
 
 export default clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
