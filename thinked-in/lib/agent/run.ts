@@ -84,9 +84,12 @@ export async function runAgent(opts: RunAgentOptions): Promise<void> {
       opts.onToolResult?.(tu.name, count);
       results.push({ type: "tool_result", tool_use_id: tu.id, content: JSON.stringify(out) });
     }
-    if (collected.length) opts.onMatches(dedupeCards(collected));
 
     messages.push({ role: "assistant", content: msg.content });
     messages.push({ role: "user", content: results });
   }
+
+  // Emit matches after the loop so they are attributed to the final answer turn,
+  // not to a thinking step. This ensures profile cards appear alongside the text.
+  if (collected.length) opts.onMatches(dedupeCards(collected));
 }

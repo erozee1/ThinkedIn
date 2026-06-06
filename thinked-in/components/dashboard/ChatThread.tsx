@@ -105,6 +105,13 @@ function ThinkingStep({ message }: { message: ChatMessage }) {
   const tools = message.toolNames ?? [];
   const isPending = message.pending;
 
+  // Deduplicate tools and count repetitions (e.g. two search_by_meaning calls → "Semantic search ×2")
+  const toolCounts = tools.reduce<Record<string, number>>((acc, name) => {
+    acc[name] = (acc[name] ?? 0) + 1;
+    return acc;
+  }, {});
+  const uniqueTools = Object.entries(toolCounts);
+
   return (
     <motion.div
       className="flex items-center gap-2"
@@ -112,19 +119,20 @@ function ThinkingStep({ message }: { message: ChatMessage }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
     >
-      <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-zinc-200/60 bg-white/60 px-3.5 py-2 text-xs text-zinc-500 backdrop-blur-sm">
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-200/60 bg-white/60 px-3.5 py-2 text-xs text-zinc-500 backdrop-blur-sm">
         {isPending ? (
           <>
             <Loader2 className="h-3.5 w-3.5 animate-spin text-[#0a66c2]" />
             <span className="text-[#0a66c2]">Searching your network…</span>
           </>
-        ) : tools.length > 0 ? (
-          tools.map((name) => {
+        ) : uniqueTools.length > 0 ? (
+          uniqueTools.map(([name, count]) => {
             const meta = TOOL_META[name] ?? { label: name, Icon: Search };
             return (
               <span key={name} className="flex items-center gap-1">
                 <meta.Icon className="h-3 w-3" />
                 {meta.label}
+                {count > 1 && <span className="text-zinc-400">×{count}</span>}
               </span>
             );
           })
