@@ -78,7 +78,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         {message.pending && !message.content ? (
           <ThinkingDots label="thinkedin is thinking…" />
         ) : (
-          <div className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass-strong px-4 py-3 text-[15px] leading-relaxed text-foreground">
+          <div className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass-strong px-4 py-3 text-[13px] leading-relaxed text-foreground">
             <RichText text={message.content} />
           </div>
         )}
