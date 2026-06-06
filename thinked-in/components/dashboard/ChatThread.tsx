@@ -53,14 +53,14 @@ function MessageBubble({ message }: { message: ChatMessage }) {
     return (
       <div className="flex flex-col gap-1.5">
         {message.content ? (
-          <motion.p
-            className="max-w-[88%] text-[13px] leading-relaxed text-foreground/50"
+          <motion.div
+            className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass-strong px-4 py-3 text-[13px] leading-relaxed text-foreground/70"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
           >
-            {message.content}
-          </motion.p>
+            <RichText text={message.content} />
+          </motion.div>
         ) : null}
         <ThinkingStep message={message} />
       </div>
