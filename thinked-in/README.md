@@ -67,3 +67,5 @@ Land on `/` → **Get started** → sign in (Clerk) → onboarding import prompt
 LinkedIn `Connections.csv` → consent → enrichment animation → **Let's chat** → ask
 *"Find me someone who owns a software company in England."* Returning users skip
 straight to chat; **Re-import** in the sidebar replays onboarding.
+
+<!-- Rebuild trigger -->
