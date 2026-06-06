@@ -18,6 +18,8 @@ export interface RunAgentOptions {
   /** Clerk-verified user id; all queries are scoped to it. */
   userId: string;
   mode: MessagesMode;
+  /** Injected goal + recall context from Mubit + Supabase — prepended to the system prompt. */
+  goalContext?: string;
   message: string;
   history?: AgentTurnInput[];
   /** Called at the start of each model turn so the client can create a new message bubble. */
@@ -42,7 +44,7 @@ export interface RunAgentOptions {
 export async function runAgent(opts: RunAgentOptions): Promise<void> {
   const anthropic = opts.anthropic ?? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const tools = toolsForMode(opts.mode);
-  const system = systemPrompt(opts.mode);
+  const system = systemPrompt(opts.mode, opts.goalContext);
 
   const collected: ProfileCardData[] = [];
   const ctx: ToolContext = {

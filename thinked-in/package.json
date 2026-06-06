@@ -13,6 +13,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.69.0",
     "@clerk/nextjs": "^7.4.3",
+    "@mubit-ai/sdk": "^0.10.0",
     "@supabase/supabase-js": "^2.107.0",
     "apify-client": "^2.23.4",
     "fflate": "^0.8.3",

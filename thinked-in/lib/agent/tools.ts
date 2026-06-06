@@ -10,6 +10,7 @@ import {
   type Filters,
 } from "./retrieval";
 import { toCard } from "./cards";
+import { mubitRemember, mubitRecordSuggestions } from "../mubit";
 import type { ProfileCardData } from "../types";
 
 export type MessagesMode = "full" | "metadata" | "none";
@@ -103,6 +104,21 @@ export function toolsForMode(mode: MessagesMode): Anthropic.Tool[] {
       },
     },
     {
+      name: "save_goal",
+      description:
+        "Persist a goal or objective the user has stated (e.g. 'find a co-founder', 'get VC introductions', " +
+        "'land a job in climate tech'). Call this the FIRST TIME a user states what they are trying to " +
+        "accomplish. Goals persist across sessions and shape future suggestions. Do not call this for " +
+        "one-off queries — only for stated ongoing objectives.",
+      input_schema: {
+        type: "object",
+        properties: {
+          goal: { type: "string", description: "The user's stated goal, in their own words." },
+        },
+        required: ["goal"],
+      },
+    },
+    {
       name: "present_connections",
       description:
         "Show profile cards to the user in the UI. Call this ONCE at the end with only the people " +
@@ -157,6 +173,13 @@ export async function runTool(
   const { supa, userId, collectCards } = ctx;
 
   switch (name) {
+    case "save_goal": {
+      const goal = String(input.goal ?? "").trim();
+      if (!goal) return { error: "goal is required" };
+      await supa.from("user_goals").insert({ user_id: userId, goal });
+      await mubitRemember(userId, `User goal: ${goal}`);
+      return { saved: true };
+    }
     case "search_by_meaning": {
       const rows = await searchByMeaning(
         supa,
@@ -207,6 +230,20 @@ export async function runTool(
         .in("linkedin_url", urls);
       const rows = (data ?? []) as ConnectionRow[];
       collectCards(rows.map(toCard));
+
+      // Record each suggestion for outreach tracking and the promise-loop memory.
+      if (rows.length) {
+        const actions = rows.map((r) => ({
+          user_id: userId,
+          connection_id: r.id,
+          linkedin_url: r.linkedin_url,
+          action_type: "suggested",
+        }));
+        await supa.from("network_actions").insert(actions);
+
+        const names = rows.map((r) => [r.first_name, r.last_name].filter(Boolean).join(" "));
+        await mubitRecordSuggestions(userId, names);
+      }
       return { presented: rows.length };
     }
     case "search_messages": {
