@@ -10,38 +10,33 @@ export async function GET() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const svc = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
-  let count: number | null = null;
-  let totalAll: number | null = null;
-  let queryError: string | null = null;
-  let mode = "none";
+  let mineLen = 0;
+  let anyLen = 0;
+  let mineErr: unknown = null;
+  let anyErr: unknown = null;
   try {
     const supa = createAdminClient();
-    const res = await supa
-      .from("connections")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId);
-    count = res.count ?? null;
-    queryError = res.error?.message ?? null;
+    const mine = await supa.from("connections").select("id, user_id").eq("user_id", userId).limit(3);
+    mineLen = mine.data?.length ?? 0;
+    mineErr = mine.error ?? null;
 
-    const totalRes = await supa.from("connections").select("id", { count: "exact", head: true });
-    totalAll = totalRes.count ?? null;
-
-    const s = await supa.from("user_settings").select("messages_mode").eq("user_id", userId).maybeSingle();
-    mode = s.data?.messages_mode ?? "none";
+    const any = await supa.from("connections").select("id, user_id").limit(3);
+    anyLen = any.data?.length ?? 0;
+    anyErr = any.error ?? null;
   } catch (e) {
-    queryError = e instanceof Error ? e.message : String(e);
+    mineErr = e instanceof Error ? e.message : String(e);
   }
 
   return Response.json({
     userId,
-    hasConnections: (count ?? 0) > 0,
-    connectionCount: count ?? 0,
-    messagesMode: mode,
+    hasConnections: mineLen > 0,
     _debug: {
       supabaseHost: url.replace(/^https?:\/\//, "").split(".")[0],
       serviceKeyLen: svc.length,
-      totalConnectionsAllUsers: totalAll,
-      queryError,
+      rowsForMe: mineLen,
+      rowsAnyUser: anyLen,
+      mineErr,
+      anyErr,
     },
   });
 }
