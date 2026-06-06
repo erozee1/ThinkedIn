@@ -1,26 +1,10 @@
-import Image from "next/image";
-import Link from "next/link";
-import logo from "@/public/thinkedinBACK.png";
+import SiteMast from "@/components/SiteMast";
 import PricingCards from "@/components/PricingCards";
 
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Masthead */}
-      <header className="relative flex items-center px-6 py-4 sm:px-8">
-        <div
-          aria-hidden
-          className="absolute inset-x-0 top-0 h-[80px] border-b border-black/10 bg-white shadow-sm"
-        />
-        <Link href="/" className="relative">
-          <Image
-            src={logo}
-            alt="thinkedin"
-            priority
-            className="h-10 w-auto -translate-y-1 sm:h-12"
-          />
-        </Link>
-      </header>
+      <SiteMast />
 
       <div className="mx-auto max-w-4xl px-6 pb-24 pt-16">
         <div className="mb-12 text-center">
