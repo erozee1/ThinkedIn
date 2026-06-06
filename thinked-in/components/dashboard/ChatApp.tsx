@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
 import type { ChatMessage, ChatSession, ProfileCardData } from "@/lib/types";
 import { seedChatSessions } from "@/lib/mock-data";
+import logo from "@/public/thinkedinBACK.png";
+import BackgroundFX from "@/components/BackgroundFX";
 import ChatSidebar from "./ChatSidebar";
 import ChatThread from "./ChatThread";
 import ChatInput from "./ChatInput";
@@ -131,12 +134,10 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <span className="text-sm font-semibold tracking-tight text-gradient">
-            thinkedin
-          </span>
+          <Image src={logo} alt="thinkedin" className="h-6 w-auto" />
         </div>
 
-        <div className="aurora opacity-20" aria-hidden />
+        <BackgroundFX />
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           {active.messages.length === 0 ? (
             <EmptyState
@@ -164,11 +165,11 @@ function EmptyState({
 }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-      <h1 className="text-2xl font-semibold text-foreground">
+      <h1 className="text-3xl font-semibold text-white drop-shadow-[0_2px_10px_rgba(12,74,140,0.4)]">
         {name ? `Hi ${name}, ` : "Hi, "}
-        <span className="text-gradient">talk to your network</span>
+        <span className="text-white/85">talk to your network</span>
       </h1>
-      <p className="mt-2 max-w-md text-muted">
+      <p className="mt-2 max-w-md text-white/85 drop-shadow-[0_1px_8px_rgba(12,74,140,0.35)]">
         Ask in plain English and I&apos;ll find the right people from your LinkedIn
         connections.
       </p>

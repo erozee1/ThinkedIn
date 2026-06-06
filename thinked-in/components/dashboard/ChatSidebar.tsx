@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
+import logo from "@/public/thinkedinBACK.png";
 import { MessagesSquare, Plus, RotateCcw, Settings, X } from "lucide-react";
 import type { ChatSession } from "@/lib/types";
 
@@ -45,9 +47,10 @@ export default function ChatSidebar({
       <div className="flex items-center justify-between px-4 py-4">
         <Link
           href="/"
-          className="text-base font-semibold tracking-tight text-gradient transition-transform active:scale-95"
+          aria-label="thinkedin — home"
+          className="transition-transform hover:scale-[1.03] active:scale-95"
         >
-          thinkedin
+          <Image src={logo} alt="thinkedin" className="h-6 w-auto" />
         </Link>
         <button
           onClick={onClose}

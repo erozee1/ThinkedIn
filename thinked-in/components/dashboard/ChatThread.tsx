@@ -44,7 +44,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         {showThinking ? (
           <ThinkingDots label="thinkedin is searching your network" />
         ) : (
-          <div className="text-[15px] leading-relaxed text-foreground">
+          <div className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass px-4 py-3 text-[15px] leading-relaxed text-foreground">
             <RichText text={message.content} />
           </div>
         )}
