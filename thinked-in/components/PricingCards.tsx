@@ -225,7 +225,7 @@ export default function PricingCards() {
 
 function OrgCreationModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
-  const { createOrganization } = useOrganizationList();
+  const { createOrganization, setActive } = useOrganizationList();
   const [step, setStep] = useState<"name" | "invite" | "done">("name");
   const [orgName, setOrgName] = useState("");
   const [emails, setEmails] = useState<string[]>([""]);
@@ -240,6 +240,7 @@ function OrgCreationModal({ onClose }: { onClose: () => void }) {
     try {
       const created = await createOrganization({ name: orgName.trim() });
       setOrg(created);
+      if (setActive) await setActive({ organization: created.id });
       setStep("invite");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create organisation");

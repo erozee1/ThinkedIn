@@ -11,16 +11,17 @@ export async function GET() {
 
   try {
     const supa = createServerSupabaseClient();
-    const { count, error } = await supa
-      .from("connections")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId);
+    const { data, error } = await supa
+      .from("user_settings")
+      .select("consent_recorded_at")
+      .eq("user_id", userId)
+      .maybeSingle();
 
     if (error) {
       return Response.json({ hasConnections: false, error: error.message }, { status: 500 });
     }
 
-    return Response.json({ hasConnections: (count ?? 0) > 0 });
+    return Response.json({ hasConnections: Boolean(data?.consent_recorded_at) });
   } catch {
     return Response.json({ hasConnections: false }, { status: 500 });
   }

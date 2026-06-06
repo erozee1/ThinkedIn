@@ -12,17 +12,18 @@ export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in?redirect_url=/dashboard");
 
-  let hasConnections = false;
+  let hasOnboarded = false;
   try {
     const supa = createServerSupabaseClient();
-    const { count } = await supa
-      .from("connections")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId);
-    hasConnections = (count ?? 0) > 0;
+    const { data } = await supa
+      .from("user_settings")
+      .select("consent_recorded_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+    hasOnboarded = Boolean(data?.consent_recorded_at);
   } catch {
-    hasConnections = false;
+    hasOnboarded = false;
   }
 
-  return <DashboardApp initialStage={hasConnections ? "chat" : "onboarding"} />;
+  return <DashboardApp initialStage={hasOnboarded ? "chat" : "onboarding"} />;
 }
