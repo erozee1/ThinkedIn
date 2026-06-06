@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import AuthDebugClient from "@/components/AuthDebugClient";
 
 export const dynamic = "force-dynamic";
@@ -8,10 +8,17 @@ export const dynamic = "force-dynamic";
 export default async function AuthDebugPage() {
   const { userId, sessionId, orgId, getToken } = await auth();
   const hdrs = await headers();
+  const cookieStore = await cookies();
   const token = await getToken().catch(() => null);
   const host = hdrs.get("host");
   const origin = hdrs.get("origin");
   const referer = hdrs.get("referer");
+  const allCookieNames = cookieStore.getAll().map((cookie) => cookie.name);
+  const clerkCookieNames = allCookieNames.filter((name) =>
+    name.includes("clerk") || name === "__session" || name === "__client_uat",
+  );
+  const hasSessionCookie = allCookieNames.includes("__session");
+  const hasClientUatCookie = allCookieNames.includes("__client_uat");
 
   return (
     <main className="min-h-dvh bg-background px-6 py-10 text-foreground">
@@ -36,6 +43,8 @@ export default async function AuthDebugPage() {
             <div>sessionId: {sessionId ?? "null"}</div>
             <div>orgId: {orgId ?? "null"}</div>
             <div>token present: {String(Boolean(token))}</div>
+            <div>__session cookie present: {String(hasSessionCookie)}</div>
+            <div>__client_uat cookie present: {String(hasClientUatCookie)}</div>
           </div>
 
           <div className="rounded-2xl bg-black/[0.04] p-4 text-sm text-foreground">
@@ -45,6 +54,7 @@ export default async function AuthDebugPage() {
             <div>referer: {referer ?? "null"}</div>
             <div>publishable key present: {String(Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY))}</div>
             <div>secret key present: {String(Boolean(process.env.CLERK_SECRET_KEY))}</div>
+            <div>clerk-related cookies: {clerkCookieNames.length ? clerkCookieNames.join(", ") : "none"}</div>
           </div>
         </div>
 
