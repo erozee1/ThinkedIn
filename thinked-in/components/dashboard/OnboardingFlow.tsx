@@ -111,13 +111,13 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                 className={`mt-5 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed px-6 py-12 text-center transition-colors ${
                   dragging
                     ? "border-[#0a66c2] bg-[#0a66c2]/5"
-                    : "border-border bg-surface hover:bg-black/[0.03]"
+                    : "border-border bg-surface hover:bg-black/[0.06]"
                 }`}
               >
                 <input
                   ref={inputRef}
                   type="file"
-                  accept=".csv"
+                  accept=".zip,.csv"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -130,7 +130,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                     Drop your LinkedIn export here
                   </p>
                   <p className="text-sm text-muted">
-                    Connections.csv — or click to browse
+                    The whole .zip — we&apos;ll pull out Connections.csv &amp;
+                    messages.csv
                   </p>
                 </div>
               </label>
