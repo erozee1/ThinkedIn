@@ -4,12 +4,29 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
-// Authenticated RLS diagnostic. Only accessible with a valid Clerk session.
-// Returns whether the RLS client can see your own connections (vs the admin client).
-// Safe to leave in — it cannot leak other users' data.
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const part = token.split(".")[1];
+    return JSON.parse(Buffer.from(part, "base64url").toString());
+  } catch {
+    return null;
+  }
+}
+
 export async function GET() {
-  const { userId } = await auth();
+  const { userId, getToken } = await auth();
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Inspect the token Supabase will receive.
+  let token: string | null = null;
+  let tokenClaims: Record<string, unknown> | null = null;
+  let tokenError: string | null = null;
+  try {
+    token = await getToken({ template: "supabase" });
+    tokenClaims = token ? decodeJwtPayload(token) : null;
+  } catch (e) {
+    tokenError = e instanceof Error ? e.message : String(e);
+  }
 
   // Admin client — bypasses RLS, always works if the DB is reachable.
   const admin = createAdminClient();
@@ -27,6 +44,11 @@ export async function GET() {
 
   return Response.json({
     userId,
+    token: {
+      obtained: Boolean(token),
+      error: tokenError,
+      claims: tokenClaims,
+    },
     admin: { count: adminCount ?? 0, error: adminErr?.message ?? null },
     rls:   { count: rlsCount   ?? 0, error: rlsErr?.message   ?? null },
     rlsWorking: !rlsErr && (rlsCount ?? 0) === (adminCount ?? 0),
