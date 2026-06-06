@@ -6,7 +6,7 @@ import { CheckoutButton } from "@clerk/nextjs/experimental";
 import { useAuth } from "@clerk/nextjs";
 import { Check } from "lucide-react";
 
-const PREMIUM_PLAN_ID = "cplan_3EkBcD93nFUwLL0jwEaj4LaaWAG";
+const PREMIUM_PLAN_ID = "cplan_3ElOjTTweSqk43p5PC1fiJFSd2W";
 
 const FREE_FEATURES = [
   "50 network queries / month",
