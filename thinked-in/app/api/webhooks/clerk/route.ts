@@ -57,6 +57,11 @@ export async function POST(request: NextRequest) {
     for (const table of tables) {
       const { error } = await supa.from(table).delete().eq("user_id", userId);
       if (error) {
+        // 42P01 = undefined_table — table may not exist yet in this environment, skip it.
+        if (error.code === "42P01") {
+          console.warn(`[WEBHOOK] table ${table} does not exist yet — skipping`);
+          continue;
+        }
         console.error(`[WEBHOOK] failed to delete from ${table}: ${error.message}`);
         return Response.json({ error: `Failed to delete from ${table}` }, { status: 500 });
       }
