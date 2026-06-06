@@ -11,6 +11,7 @@ export async function GET() {
   const svc = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
   let count: number | null = null;
+  let totalAll: number | null = null;
   let queryError: string | null = null;
   let mode = "none";
   try {
@@ -21,6 +22,10 @@ export async function GET() {
       .eq("user_id", userId);
     count = res.count ?? null;
     queryError = res.error?.message ?? null;
+
+    const totalRes = await supa.from("connections").select("id", { count: "exact", head: true });
+    totalAll = totalRes.count ?? null;
+
     const s = await supa.from("user_settings").select("messages_mode").eq("user_id", userId).maybeSingle();
     mode = s.data?.messages_mode ?? "none";
   } catch (e) {
@@ -33,8 +38,9 @@ export async function GET() {
     connectionCount: count ?? 0,
     messagesMode: mode,
     _debug: {
-      supabaseHost: url.replace(/^https?:\/\//, "").split(".")[0], // project ref only
+      supabaseHost: url.replace(/^https?:\/\//, "").split(".")[0],
       serviceKeyLen: svc.length,
+      totalConnectionsAllUsers: totalAll,
       queryError,
     },
   });
