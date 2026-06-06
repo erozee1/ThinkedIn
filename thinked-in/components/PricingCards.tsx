@@ -117,12 +117,12 @@ export default function PricingCards() {
           <p className="text-2xl font-semibold text-[#0a66c2]">Premium</p>
           <div className="mt-3 flex items-end gap-1">
             <span className="text-4xl font-semibold tracking-tight text-zinc-900">
-              {annual ? "£4" : "£5"}
+              {annual ? "£8" : "£10"}
             </span>
             <span className="mb-1 text-sm text-zinc-400">/ month</span>
           </div>
           {annual && (
-            <p className="mt-0.5 text-xs font-medium text-emerald-600">£48 billed annually — save £12</p>
+            <p className="mt-0.5 text-xs font-medium text-emerald-600">£96 billed annually — save £24</p>
           )}
           <p className="mt-2 text-sm text-zinc-500">
             For power users and professionals. Refund anytime, no questions asked.
