@@ -1,0 +1,68 @@
+// Shared frontend types for thinkedin.
+// `Connection` mirrors the eventual Supabase `connections` schema so the real
+// backend can slot in behind the stub /api routes without changing components.
+
+export type Seniority =
+  | "founder"
+  | "c-suite"
+  | "vp"
+  | "director"
+  | "manager"
+  | "ic";
+
+export type EnrichmentStatus = "pending" | "enriched" | "failed";
+
+export interface Connection {
+  id: string;
+  firstName: string;
+  lastName: string;
+  /** Convenience full name (firstName + lastName). */
+  name: string;
+  position: string;
+  company: string;
+  city: string | null;
+  country: string | null;
+  /** "City, Country" for display. */
+  location: string | null;
+  summary: string | null;
+  industry: string | null;
+  seniority: Seniority;
+  skills: string[];
+  avatarUrl: string;
+  linkedinUrl: string;
+  enrichmentStatus: EnrichmentStatus;
+}
+
+/** A person card shown in the chat reply / landing demo. */
+export type ProfileCardData = Pick<
+  Connection,
+  "id" | "name" | "position" | "company" | "location" | "avatarUrl" | "linkedinUrl"
+>;
+
+export type ChatRole = "user" | "assistant";
+
+export interface ChatMessage {
+  id: string;
+  role: ChatRole;
+  content: string;
+  /** Matched people the assistant surfaced inline with this reply. */
+  matches?: ProfileCardData[];
+  /** Set while an assistant message is still streaming in. */
+  pending?: boolean;
+}
+
+export interface ChatSession {
+  id: string;
+  title: string;
+  /** ISO timestamp of last activity, for sidebar ordering/labels. */
+  updatedAt: string;
+  messages: ChatMessage[];
+}
+
+/** Progress shape returned by the stubbed /api/enrich endpoint. */
+export interface EnrichmentProgress {
+  jobId: string;
+  total: number;
+  enrichedCount: number;
+  status: "processing" | "complete" | "failed";
+}

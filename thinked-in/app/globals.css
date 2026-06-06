@@ -1,26 +1,189 @@
 @import "tailwindcss";
 
+/*
+ * thinkedin — LinkedIn-identical LIGHT theme, with tasteful blue gradients.
+ * Palette mirrors LinkedIn: warm grey page, white cards, near-black text,
+ * #0a66c2 brand blue.
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* LinkedIn surfaces */
+  --bg: #f4f2ee; /* LinkedIn warm grey page background */
+  --surface: #ffffff; /* cards */
+  --foreground: rgba(0, 0, 0, 0.9);
+  --muted: rgba(0, 0, 0, 0.6);
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.15);
+
+  /* LinkedIn brand blues (used for gradients + accents) */
+  --hue-indigo: #0a66c2; /* LinkedIn primary blue */
+  --hue-blue: #378fe9; /* medium blue */
+  --hue-cyan: #70b5f9; /* light blue */
+  --hue-violet: #004182; /* dark blue */
+
+  --accent: #0a66c2;
+  --accent-hover: #004182;
+
+  /* Glass surfaces (frosted white) */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-strong: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(0, 0, 0, 0.08);
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --color-background: var(--bg);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+
+  --color-indigo-glow: var(--hue-indigo);
+  --color-blue-glow: var(--hue-blue);
+  --color-cyan-glow: var(--hue-cyan);
+  --color-violet-glow: var(--hue-violet);
+
+  --color-accent: var(--accent);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------------------
+ * Aurora — subtle blue gradient wash over the warm-grey page (light, soft).
+ * ------------------------------------------------------------------------- */
+.aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* Frutiger Aero cool-blue sky: vibrant blue up top, glossy near-white below,
+     with a soft sun bloom and a bright ground glow. Static so the background is
+     pixel-identical across pages, keeping transitions seamless. */
+  background:
+    radial-gradient(42% 34% at 86% 6%, rgba(255, 255, 255, 0.65), transparent 62%),
+    radial-gradient(80% 55% at 50% 116%, rgba(255, 255, 255, 0.6), transparent 60%),
+    linear-gradient(180deg, #2a8fe6 0%, #5fb4f2 34%, #a9dcf8 70%, #e8f6ff 100%);
+}
+
+/* ---------------------------------------------------------------------------
+ * Glass surfaces (frosted white cards)
+ * ------------------------------------------------------------------------- */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Brand / heading gradient text — LinkedIn blue gradient. */
+.text-gradient {
+  background: linear-gradient(95deg, #0a66c2 0%, #378fe9 55%, #70b5f9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Blue gradient fill for buttons/accents. */
+.bg-gradient-blue {
+  background-image: linear-gradient(120deg, #0a66c2 0%, #378fe9 100%);
+}
+
+/* Soft white "clouds" — very blurred spots that drift slowly. */
+.cloud {
+  position: absolute;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.65);
+  filter: blur(60px);
+  will-change: transform;
+  pointer-events: none;
+}
+@keyframes cloud-a {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(90px, -16px, 0); }
+}
+@keyframes cloud-b {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-84px, 20px, 0); }
+}
+@keyframes cloud-c {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(64px, 28px, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cloud {
+    animation: none !important;
+  }
+}
+
+/* Iridescent oil-slick sheen — rotate a conic gradient for a glassy shimmer. */
+.iridescent-sheen {
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 158, 199, 0.6),
+    rgba(143, 211, 255, 0.6),
+    rgba(179, 164, 255, 0.6),
+    rgba(156, 245, 214, 0.6),
+    rgba(255, 213, 158, 0.6),
+    rgba(126, 200, 255, 0.6),
+    rgba(255, 158, 199, 0.6)
+  );
+  animation: ir-rotate 7s linear infinite;
+}
+
+@keyframes ir-rotate {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iridescent-sheen {
+    animation: none;
+  }
+}
+
+/* Thin custom scrollbar for light surfaces */
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.22) transparent;
+}
+.scroll-slim::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 9999px;
+}
+.scroll-slim::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora {
+    animation: none;
+  }
 }
