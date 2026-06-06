@@ -23,12 +23,26 @@ async function runActor(actorId: string, input: Record<string, unknown>): Promis
   return items as Record<string, unknown>[];
 }
 
-/** Enrich a batch of LinkedIn profile URLs (offline enrichment). */
+// ---------------------------------------------------------------------------
+// Cost guard: Apify charges per profile scraped. We cap enrichment at 10
+// profiles per user while the product is in early development / demo mode.
+// Raise this once billing is confirmed and you've stress-tested the actor
+// costs in production. This limit is enforced here (the single call-site) so
+// it applies to both the online upload pipeline and offline scripts.
+// ---------------------------------------------------------------------------
+const ENRICH_LIMIT_PER_USER = 10;
+
+/** Enrich a batch of LinkedIn profile URLs (offline enrichment).
+ *  Input is silently capped at ENRICH_LIMIT_PER_USER to control Apify costs. */
 export function scrapeProfiles(
   urls: string[],
   extra: Record<string, unknown> = {},
 ): Promise<Record<string, unknown>[]> {
-  return runActor(PROFILE_ACTOR(), { profileUrls: urls, urls, ...extra });
+  const capped = urls.slice(0, ENRICH_LIMIT_PER_USER);
+  if (capped.length < urls.length) {
+    console.warn(`[APIFY] scrapeProfiles: capped ${urls.length} → ${capped.length} (ENRICH_LIMIT_PER_USER=${ENRICH_LIMIT_PER_USER})`);
+  }
+  return runActor(PROFILE_ACTOR(), { profileUrls: capped, urls: capped, ...extra });
 }
 
 /** Scrape one profile's recent posts/activity (live deep dive, Phase 6). */
