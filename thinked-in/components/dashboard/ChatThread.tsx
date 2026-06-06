@@ -48,21 +48,19 @@ function MessageBubble({ message }: { message: ChatMessage }) {
     return <ThinkingStep message={message} />;
   }
 
-  // Thinking step: render any text the model emitted first, then the tool pill.
+  // Thinking step: muted caption + compact tool pill. Visually subordinate to the final answer.
   if (message.kind === "thinking") {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         {message.content ? (
-          <motion.div
-            className="flex items-start gap-3"
-            initial={{ opacity: 0, y: 10 }}
+          <motion.p
+            className="max-w-[88%] text-[13px] leading-relaxed text-foreground/50"
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.28, ease: "easeOut" }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
           >
-            <div className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass px-4 py-3 text-[15px] leading-relaxed text-foreground">
-              <RichText text={message.content} />
-            </div>
-          </motion.div>
+            {message.content}
+          </motion.p>
         ) : null}
         <ThinkingStep message={message} />
       </div>
