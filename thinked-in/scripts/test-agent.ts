@@ -17,11 +17,12 @@ function arg(flag: string): string | undefined {
   return i >= 0 ? process.argv[i + 1] : undefined;
 }
 
-const userId = arg("--user");
-if (!userId) {
+const userIdArg = arg("--user");
+if (!userIdArg) {
   console.error('Missing --user <id>. Example: --user demo "how many founders do I know?"');
   process.exit(1);
 }
+const userId: string = userIdArg;
 const question = process.argv.slice(2).find((a) => !a.startsWith("--") && a !== userId);
 
 const DEFAULT_SUITE = [
