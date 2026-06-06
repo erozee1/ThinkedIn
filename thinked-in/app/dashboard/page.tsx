@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import DashboardApp from "@/components/dashboard/DashboardApp";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // Server decides the initial stage from the DB (source of truth), so a stale
 // client cache can't strand a user in onboarding when they already have a network.
@@ -14,7 +14,7 @@ export default async function DashboardPage() {
 
   let hasConnections = false;
   try {
-    const supa = createServerSupabaseClient();
+    const supa = createAdminClient();
     const { count } = await supa
       .from("connections")
       .select("id", { count: "exact", head: true })
