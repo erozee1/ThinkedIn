@@ -6,9 +6,11 @@ import type { MessagesMode } from "@/lib/agent/tools";
 
 export const maxDuration = 60;
 
-// Wire protocol (newline-delimited JSON), matching the existing UI:
-//   {"type":"matches","matches":[...]}   (cumulative; last one wins)
-//   {"type":"delta","text":"..."}        (many)
+// Wire protocol (newline-delimited JSON):
+//   {"type":"turn_start"}                       each agent turn begins → client creates a new bubble
+//   {"type":"delta","text":"..."}               streamed text token for the current turn
+//   {"type":"turn_end","tools":["tool_name"]}   current turn done; tools=[] means final answer
+//   {"type":"matches","matches":[...]}          profile cards to attach to the current message
 //
 // Auth: userId comes from Clerk's server-verified session. Every DB query is
 // scoped to it explicitly (service-role client), so data is isolated per user.
@@ -47,6 +49,8 @@ export async function POST(request: NextRequest) {
           mode,
           message,
           history,
+          onTurnStart: () => send({ type: "turn_start" }),
+          onTurnEnd: (tools) => send({ type: "turn_end", tools }),
           onText: (text) => send({ type: "delta", text }),
           onMatches: (matches) => send({ type: "matches", matches }),
         });

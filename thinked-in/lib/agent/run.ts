@@ -20,7 +20,11 @@ export interface RunAgentOptions {
   mode: MessagesMode;
   message: string;
   history?: AgentTurnInput[];
-  /** Called with each streamed text token of the final answer. */
+  /** Called at the start of each model turn so the client can create a new message bubble. */
+  onTurnStart?: () => void;
+  /** Called at the end of each model turn. toolNames is non-empty for intermediate tool-call turns. */
+  onTurnEnd?: (toolNames: string[]) => void;
+  /** Called with each streamed text token. */
   onText: (text: string) => void;
   /** Called with the cumulative, deduped list of surfaced people. */
   onMatches: (matches: ProfileCardData[]) => void;
@@ -53,11 +57,17 @@ export async function runAgent(opts: RunAgentOptions): Promise<void> {
   ];
 
   for (let step = 0; step < MAX_STEPS; step++) {
+    opts.onTurnStart?.();
+
     const turn = anthropic.messages.stream({ model: MODEL, max_tokens: 2000, system, tools, messages });
     turn.on("text", (t) => opts.onText(t));
     const msg = await turn.finalMessage();
 
     const toolUses = msg.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+
+    // Signal end of turn: pass tool names so the client can decide how to render it.
+    opts.onTurnEnd?.(toolUses.map((t) => t.name));
+
     if (toolUses.length === 0) break; // end_turn — final answer already streamed
 
     const results: Anthropic.ToolResultBlockParam[] = [];

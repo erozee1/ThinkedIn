@@ -227,7 +227,15 @@ function EmptyState({
   );
 }
 
-/** Reads the NDJSON stream from /api/chat and patches the assistant message. */
+/**
+ * Reads the NDJSON stream from /api/chat. Each agent turn emits turn_start /
+ * turn_end events that map to separate ChatMessage bubbles. Tool-call turns
+ * are rendered as compact "thinking" steps; the final answer is a full bubble.
+ *
+ * assistantId is the ID of the placeholder message already in the session
+ * (created by sendMessage before the fetch). The first turn_start reuses it;
+ * subsequent turns append new messages.
+ */
 async function streamReply(
   message: string,
   history: ChatMessage[],
@@ -248,8 +256,12 @@ async function streamReply(
   const decoder = new TextDecoder();
   let buffer = "";
 
-  const update = (patch: (m: ChatMessage) => ChatMessage) =>
-    patchActive((msgs) => msgs.map((m) => (m.id === assistantId ? patch(m) : m)));
+  // stepMsgId tracks which message is currently receiving deltas.
+  let stepMsgId = assistantId;
+  let turnCount = 0;
+
+  const updateCurrent = (patch: (m: ChatMessage) => ChatMessage) =>
+    patchActive((msgs) => msgs.map((m) => (m.id === stepMsgId ? patch(m) : m)));
 
   while (true) {
     const { done, value } = await reader.read();
@@ -263,19 +275,43 @@ async function streamReply(
       if (!line) continue;
 
       const event = JSON.parse(line) as
+        | { type: "turn_start" }
+        | { type: "turn_end"; tools: string[] }
+        | { type: "delta"; text: string }
         | { type: "matches"; matches: ProfileCardData[] }
-        | { type: "post"; post: PostData }
-        | { type: "delta"; text: string };
+        | { type: "post"; post: PostData };
 
-      if (event.type === "matches") {
-        update((m) => ({ ...m, matches: event.matches }));
-      } else if (event.type === "post") {
-        update((m) => ({ ...m, post: event.post }));
+      if (event.type === "turn_start") {
+        if (turnCount === 0) {
+          // First turn reuses the placeholder message already in the session.
+          stepMsgId = assistantId;
+        } else {
+          // Subsequent turns get a fresh message appended to the session.
+          const newId = uid();
+          stepMsgId = newId;
+          patchActive((msgs) => [
+            ...msgs,
+            { id: newId, role: "assistant", content: "", pending: true },
+          ]);
+        }
+        turnCount++;
+      } else if (event.type === "turn_end") {
+        updateCurrent((m) => ({
+          ...m,
+          pending: false,
+          kind: event.tools.length > 0 ? "thinking" : "answer",
+          toolNames: event.tools.length > 0 ? event.tools : undefined,
+        }));
       } else if (event.type === "delta") {
-        update((m) => ({ ...m, content: m.content + event.text }));
+        updateCurrent((m) => ({ ...m, content: m.content + event.text }));
+      } else if (event.type === "matches") {
+        updateCurrent((m) => ({ ...m, matches: event.matches }));
+      } else if (event.type === "post") {
+        updateCurrent((m) => ({ ...m, post: event.post }));
       }
     }
   }
 
-  update((m) => ({ ...m, pending: false }));
+  // Ensure the last message is never left pending (guards against stream errors).
+  updateCurrent((m) => ({ ...m, pending: false }));
 }

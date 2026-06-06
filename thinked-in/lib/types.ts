@@ -52,6 +52,14 @@ export interface ChatMessage {
   id: string;
   role: ChatRole;
   content: string;
+  /**
+   * "thinking" = an intermediate tool-call turn (shown as a compact step strip).
+   * "answer"   = the final model response (shown as a full chat bubble).
+   * Undefined until turn_end is received; treated as "answer" for backwards compat.
+   */
+  kind?: "thinking" | "answer";
+  /** Tools called during this turn — populated for kind="thinking" messages. */
+  toolNames?: string[];
   /** Matched people the assistant surfaced inline with this reply. */
   matches?: ProfileCardData[];
   /** A drafted post/message the assistant surfaced. */
@@ -66,6 +74,19 @@ export interface ChatSession {
   /** ISO timestamp of last activity, for sidebar ordering/labels. */
   updatedAt: string;
   messages: ChatMessage[];
+}
+
+export interface UploadPreviewPerson {
+  name: string;
+  detail: string | null;
+  initials: string;
+}
+
+export interface UploadResponse {
+  jobId: string;
+  totalConnections: number;
+  hasMessagesFile: boolean;
+  previewConnections: UploadPreviewPerson[];
 }
 
 /** Progress shape returned by the stubbed /api/enrich endpoint. */

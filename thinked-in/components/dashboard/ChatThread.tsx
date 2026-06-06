@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { Search, Filter, Hash, Users, BarChart2, Loader2 } from "lucide-react";
 import type { ChatMessage } from "@/lib/types";
 import ProfileCard from "@/components/ProfileCard";
 import PostCard from "@/components/dashboard/PostCard";
@@ -42,7 +43,10 @@ function MessageBubble({ message }: { message: ChatMessage }) {
     );
   }
 
-  const showThinking = message.pending && !message.content;
+  // Compact thinking step — shown while the agent is mid-reasoning or once complete.
+  if (message.kind === "thinking" || (message.pending && !message.content && !message.kind)) {
+    return <ThinkingStep message={message} />;
+  }
 
   return (
     <motion.div
@@ -52,8 +56,8 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       transition={{ duration: 0.28, ease: "easeOut" }}
     >
       <div className="min-w-0 flex-1">
-        {showThinking ? (
-          <ThinkingDots label="thinkedin is searching your network" />
+        {message.pending && !message.content ? (
+          <ThinkingDots label="thinkedin is thinking…" />
         ) : (
           <div className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass px-4 py-3 text-[15px] leading-relaxed text-foreground">
             <RichText text={message.content} />
@@ -83,6 +87,49 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           >
             <PostCard post={message.post} />
           </motion.div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+const TOOL_META: Record<string, { label: string; Icon: React.ElementType }> = {
+  search_by_meaning:   { label: "Semantic search",      Icon: Search },
+  query_by_filter:     { label: "Filtered network",     Icon: Filter },
+  keyword_search:      { label: "Keyword search",       Icon: Hash },
+  present_connections: { label: "Selected connections", Icon: Users },
+  get_network_stats:   { label: "Analysed network",     Icon: BarChart2 },
+};
+
+function ThinkingStep({ message }: { message: ChatMessage }) {
+  const tools = message.toolNames ?? [];
+  const isPending = message.pending;
+
+  return (
+    <motion.div
+      className="flex items-center gap-2"
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+    >
+      <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-zinc-200/60 bg-white/60 px-3.5 py-2 text-xs text-zinc-500 backdrop-blur-sm">
+        {isPending ? (
+          <>
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-[#0a66c2]" />
+            <span className="text-[#0a66c2]">Searching your network…</span>
+          </>
+        ) : tools.length > 0 ? (
+          tools.map((name) => {
+            const meta = TOOL_META[name] ?? { label: name, Icon: Search };
+            return (
+              <span key={name} className="flex items-center gap-1">
+                <meta.Icon className="h-3 w-3" />
+                {meta.label}
+              </span>
+            );
+          })
+        ) : (
+          <span>Searched your network</span>
         )}
       </div>
     </motion.div>
