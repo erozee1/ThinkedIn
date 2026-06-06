@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useUser } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
-import type { ChatMessage, ChatSession, PostData, ProfileCardData } from "@/lib/types";
+import type { ChatMessage, ChatSession, PostData, ProfileCardData, ToolCallInfo } from "@/lib/types";
 import { loadSessions, saveSessions } from "@/lib/sessions-store";
 import logo from "@/public/thinkedinBACK.png";
 import BackgroundFX from "@/components/BackgroundFX";
@@ -290,7 +290,7 @@ async function streamReply(
 
       const event = JSON.parse(line) as
         | { type: "turn_start" }
-        | { type: "turn_end"; tools: string[] }
+        | { type: "turn_end"; tools: ToolCallInfo[] }
         | { type: "delta"; text: string }
         | { type: "matches"; matches: ProfileCardData[] }
         | { type: "post"; post: PostData };
@@ -314,7 +314,8 @@ async function streamReply(
           ...m,
           pending: false,
           kind: event.tools.length > 0 ? "thinking" : "answer",
-          toolNames: event.tools.length > 0 ? event.tools : undefined,
+          toolNames: event.tools.length > 0 ? event.tools.map((t) => t.name) : undefined,
+          toolCalls: event.tools.length > 0 ? event.tools : undefined,
         }));
       } else if (event.type === "delta") {
         updateCurrent((m) => ({ ...m, content: m.content + event.text }));

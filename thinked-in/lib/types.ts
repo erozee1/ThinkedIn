@@ -51,6 +51,13 @@ export interface PostData {
   body: string;
 }
 
+/** Structured info about a single tool call, forwarded from the agent to the client. */
+export interface ToolCallInfo {
+  name: string;
+  input: Record<string, unknown>;
+  resultCount: number | null;
+}
+
 export interface ChatMessage {
   id: string;
   role: ChatRole;
@@ -63,6 +70,8 @@ export interface ChatMessage {
   kind?: "thinking" | "answer";
   /** Tools called during this turn — populated for kind="thinking" messages. */
   toolNames?: string[];
+  /** Rich tool call details (supersedes toolNames when present). */
+  toolCalls?: ToolCallInfo[];
   /** Matched people the assistant surfaced inline with this reply. */
   matches?: ProfileCardData[];
   /** A drafted post/message the assistant surfaced. */

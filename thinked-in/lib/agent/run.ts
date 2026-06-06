@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { toolsForMode, runTool, type MessagesMode, type ToolContext } from "./tools";
 import { systemPrompt } from "./prompt";
 import { dedupeCards } from "./cards";
-import type { ProfileCardData } from "../types";
+import type { ProfileCardData, ToolCallInfo } from "../types";
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 const MAX_STEPS = 6;
@@ -28,8 +28,8 @@ export interface RunAgentOptions {
   history?: AgentTurnInput[];
   /** Called at the start of each model turn so the client can create a new message bubble. */
   onTurnStart?: () => void;
-  /** Called at the end of each model turn. toolNames is non-empty for intermediate tool-call turns. */
-  onTurnEnd?: (toolNames: string[]) => void;
+  /** Called at the end of each model turn. tools is non-empty for intermediate tool-call turns. */
+  onTurnEnd?: (tools: ToolCallInfo[]) => void;
   /** Called with each streamed text token. */
   onText: (text: string) => void;
   /** Called with the cumulative, deduped list of surfaced people. */
@@ -45,9 +45,17 @@ export interface RunAgentOptions {
  * Drives the Claude tool-use loop over the user's network. Shared by the chat
  * route (streams to the client) and the CLI test harness (prints to console).
  */
+const WEB_SEARCH_TOOL: Anthropic.WebSearchTool20250305 = {
+  type: "web_search_20250305",
+  name: "web_search",
+};
+
 export async function runAgent(opts: RunAgentOptions): Promise<void> {
   const anthropic = opts.anthropic ?? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const tools = toolsForMode(opts.mode);
+  const tools: (Anthropic.Tool | Anthropic.WebSearchTool20250305)[] = [
+    WEB_SEARCH_TOOL,
+    ...toolsForMode(opts.mode),
+  ];
   const system = systemPrompt(opts.mode, opts.goalContext, opts.orgSize);
 
   const collected: ProfileCardData[] = [];
@@ -71,11 +79,19 @@ export async function runAgent(opts: RunAgentOptions): Promise<void> {
     const msg = await turn.finalMessage();
 
     const toolUses = msg.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+    const serverToolUses = msg.content.filter((b): b is Anthropic.ServerToolUseBlock => b.type === "server_tool_use");
 
-    // Signal end of turn: pass tool names so the client can decide how to render it.
-    opts.onTurnEnd?.(toolUses.map((t) => t.name));
+    // Collect per-tool info to forward to the client for richer UI.
+    const toolInfos: ToolCallInfo[] = serverToolUses.map((tu) => ({
+      name: tu.name,
+      input: tu.input as Record<string, unknown>,
+      resultCount: null,
+    }));
 
-    if (toolUses.length === 0) break; // end_turn — final answer already streamed
+    if (toolUses.length === 0) {
+      opts.onTurnEnd?.(toolInfos); // server-tool-only turn or end turn
+      break;
+    }
 
     const results: Anthropic.ToolResultBlockParam[] = [];
     for (const tu of toolUses) {
@@ -87,10 +103,17 @@ export async function runAgent(opts: RunAgentOptions): Promise<void> {
       } catch (e) {
         out = { error: e instanceof Error ? e.message : String(e) };
       }
-      const count = Array.isArray(out) ? out.length : null;
-      opts.onToolResult?.(tu.name, count);
+      const resultCount =
+        Array.isArray(out) ? out.length :
+        out && typeof out === "object" && "count" in (out as object) ? (out as { count: number }).count :
+        out && typeof out === "object" && "presented" in (out as object) ? (out as { presented: number }).presented :
+        null;
+      opts.onToolResult?.(tu.name, resultCount);
+      toolInfos.push({ name: tu.name, input, resultCount });
       results.push({ type: "tool_result", tool_use_id: tu.id, content: JSON.stringify(out) });
     }
+
+    opts.onTurnEnd?.(toolInfos);
 
     messages.push({ role: "assistant", content: msg.content });
     messages.push({ role: "user", content: results });
