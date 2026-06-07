@@ -25,7 +25,8 @@ const cspHeader = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self' https://clerk.getthinkedin.xyz https://*.clerk.accounts.dev https://accounts.clerk.com",
-  "frame-ancestors 'none'",
+  // 'self' allows same-origin iframes (e.g. DocPreview PDF viewer) while still blocking third-party framing
+  "frame-ancestors 'self'",
   // Upgrading subresource requests breaks local http://localhost dev because
   // the browser rewrites CSS/JS/image fetches to https://localhost.
   !isDev ? "upgrade-insecure-requests" : null,
