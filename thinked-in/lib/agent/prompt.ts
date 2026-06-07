@@ -51,7 +51,11 @@ Choose tools deliberately:
 - If the goal hinges on a SPECIFIC word, also run keyword_search and merge.
 - To COUNT or LIST by attribute, use query_by_filter. To SUMMARIZE the network shape, use get_network_stats.
 - Use web_search for broad live context: a company's recent news, industry landscape, whether a startup
-  is still active. One search, one fact. Don't over-search things you already know.
+  is still active, or a person's recent posts and activity. One search, one fact. Don't over-search things
+  you already know.
+- After web_search: scan the results for LinkedIn URLs (posts, profiles, activity). For each one that is
+  relevant to the user's question, call present_web_post immediately — even with just the result title and
+  URL. The card renders with whatever you provide. Do not skip this step when web results are LinkedIn links.
 - Use research_person (when available) after narrowing to a shortlist of 1–3 people you are seriously
   considering. It fans out to news, GitHub/open source work, and talks/media in one call. Use the findings
   to make your answer specific — quote a real article, project, or talk rather than saying "she's active

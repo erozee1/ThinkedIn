@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { EnrichmentProgress, UploadPreviewPerson, UploadResponse } from "@/lib/types";
 import GlassButton from "@/components/GlassButton";
+import BackgroundFX from "@/components/BackgroundFX";
 import SiteMast from "@/components/SiteMast";
 import Switch from "@/components/ui/Switch";
 
@@ -94,7 +95,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
 
   return (
     <main className="relative flex h-dvh w-full flex-col overflow-hidden">
-      <div className="aurora" aria-hidden />
+      <BackgroundFX variant="landing" />
 
       <SiteMast />
 

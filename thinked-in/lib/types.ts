@@ -53,6 +53,14 @@ export type ProfileCardData = Pick<
   verified?: ProfileVerification;
   /** True when the connection belongs to an org team member rather than the requesting user. */
   fromTeam?: boolean;
+  /** Relationship strength of the connection's owner with this person. */
+  relationshipStrength?: string;
+  /** ISO date of last contact between the owner and this person. */
+  lastContacted?: string | null;
+  /** Name of the org team member who owns this connection (org networks only). */
+  viaName?: string;
+  /** Avatar URL of the org team member who owns this connection. */
+  viaAvatarUrl?: string;
 };
 
 export type ChatRole = "user" | "assistant";
@@ -62,6 +70,28 @@ export interface PostData {
   author?: { name: string; role: string; avatarUrl: string };
   title: string;
   body: string;
+}
+
+/** A single web search result source shown in the sources strip. */
+export interface WebResultData {
+  url: string;
+  title: string;
+  pageAge?: string | null;
+  domain: string;
+  faviconUrl: string;
+}
+
+/** A LinkedIn-style post surfaced from web search results. */
+export interface LinkedInPostData {
+  authorName: string;
+  authorTitle?: string;
+  authorAvatarUrl?: string;
+  content: string;
+  sourceUrl?: string;
+  imageUrl?: string;
+  timeAgo?: string;
+  likesCount?: number;
+  commentsCount?: number;
 }
 
 /** Structured info about a single tool call, forwarded from the agent to the client. */
@@ -91,6 +121,10 @@ export interface ChatMessage {
   matches?: ProfileCardData[];
   /** A drafted post/message the assistant surfaced. */
   post?: PostData;
+  /** Web search source URLs found during this turn. */
+  webResults?: WebResultData[];
+  /** LinkedIn-style posts surfaced from web search. */
+  linkedInPosts?: LinkedInPostData[];
   /** Set while an assistant message is still streaming in. */
   pending?: boolean;
 }

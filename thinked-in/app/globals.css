@@ -138,6 +138,67 @@ body {
   }
 }
 
+/* Autonomous floating blobs — landing hero only. */
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  will-change: transform;
+  pointer-events: none;
+  filter: blur(88px);
+}
+.blob-1 {
+  width: 480px; height: 480px;
+  left: -6%; top: 2%;
+  background: rgba(90, 168, 228, 0.38);
+  animation: blob-a 26s ease-in-out infinite;
+}
+.blob-2 {
+  width: 380px; height: 380px;
+  right: -2%; top: 8%;
+  background: rgba(75, 155, 220, 0.30);
+  animation: blob-b 34s ease-in-out infinite;
+}
+.blob-3 {
+  width: 420px; height: 420px;
+  left: 28%; bottom: -8%;
+  background: rgba(115, 185, 240, 0.35);
+  animation: blob-c 22s ease-in-out infinite;
+}
+.blob-4 {
+  width: 300px; height: 300px;
+  right: 18%; bottom: 18%;
+  background: rgba(155, 212, 248, 0.40);
+  animation: blob-d 38s ease-in-out infinite;
+}
+@keyframes blob-a {
+  0%   { transform: translate(0px, 0px); }
+  25%  { transform: translate(90px, 60px); }
+  50%  { transform: translate(50px, -70px); }
+  75%  { transform: translate(-60px, 40px); }
+  100% { transform: translate(0px, 0px); }
+}
+@keyframes blob-b {
+  0%   { transform: translate(0px, 0px); }
+  30%  { transform: translate(-80px, 70px); }
+  60%  { transform: translate(-30px, -60px); }
+  100% { transform: translate(0px, 0px); }
+}
+@keyframes blob-c {
+  0%   { transform: translate(0px, 0px); }
+  40%  { transform: translate(-90px, -55px); }
+  70%  { transform: translate(70px, -30px); }
+  100% { transform: translate(0px, 0px); }
+}
+@keyframes blob-d {
+  0%   { transform: translate(0px, 0px); }
+  35%  { transform: translate(60px, 80px); }
+  65%  { transform: translate(-70px, 30px); }
+  100% { transform: translate(0px, 0px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .blob { animation: none !important; }
+}
+
 /* Iridescent oil-slick sheen — rotate a conic gradient for a glassy shimmer. */
 .iridescent-sheen {
   background: conic-gradient(

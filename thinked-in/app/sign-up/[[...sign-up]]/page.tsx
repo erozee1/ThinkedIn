@@ -19,7 +19,7 @@ export default function SignUpPage() {
 
   return (
     <main className="relative flex min-h-dvh flex-col overflow-hidden">
-      <BackgroundFX />
+      <BackgroundFX variant="landing" />
       <SiteMast />
       <div className="relative z-10 flex flex-1 items-center justify-center px-4">
         <motion.div

@@ -26,14 +26,14 @@ export default function LandingHero() {
       animate={{ opacity: leaving ? 0 : 1, scale: leaving ? 0.985 : 1 }}
       transition={{ duration: 0.42, ease: "easeInOut" }}
     >
-      <h1 className="text-balance text-4xl font-semibold leading-tight tracking-tight text-white drop-shadow-[0_2px_10px_rgba(12,74,140,0.4)] sm:text-5xl lg:whitespace-nowrap xl:text-6xl">
+      <h1 className="font-serif-ui text-balance text-4xl font-semibold leading-tight tracking-tight text-[#0b2340] sm:text-5xl lg:whitespace-nowrap xl:text-6xl">
         Talk to your network{" "}
         <br className="lg:hidden" />
-        <span className="text-white/80">in one prompt</span>
+        <span className="text-[#0b2340]/70">in one prompt</span>
       </h1>
 
       {/* Desktop-only one-liner (mobile stays as-is) */}
-      <p className="mt-4 hidden text-balance text-lg text-white/85 drop-shadow-[0_1px_8px_rgba(12,74,140,0.35)] md:block">
+      <p className="font-serif-ui mt-4 hidden text-balance text-lg font-normal text-[#1a4070]/75 md:block">
         Find out what your bubble can provide today.
       </p>
 

@@ -6,6 +6,8 @@ import { Search, Filter, Globe, Hash, Users, BarChart2, Loader2, MessageSquare, 
 import type { ChatMessage, ProfileCardData, ToolCallInfo } from "@/lib/types";
 import ProfileCard from "@/components/ProfileCard";
 import PostCard from "@/components/dashboard/PostCard";
+import WebResultsStrip from "@/components/dashboard/WebResultsStrip";
+import LinkedInPostCard from "@/components/dashboard/LinkedInPostCard";
 import ThinkingDots from "@/components/ThinkingDots";
 
 export default function ChatThread({
@@ -82,6 +84,15 @@ function MessageBubble({
           </motion.div>
         ) : null}
         <ThinkingStep message={message} />
+        {message.webResults?.length ? (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22, ease: "easeOut", delay: 0.1 }}
+          >
+            <WebResultsStrip results={message.webResults} />
+          </motion.div>
+        ) : null}
       </div>
     );
   }
@@ -135,6 +146,21 @@ function MessageBubble({
           >
             <PostCard post={message.post} />
           </motion.div>
+        ) : null}
+
+        {message.linkedInPosts?.length ? (
+          <div className="mt-4 flex flex-col gap-3 sm:max-w-sm">
+            {message.linkedInPosts.map((post, i) => (
+              <motion.div
+                key={`${post.sourceUrl}-${i}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <LinkedInPostCard post={post} />
+              </motion.div>
+            ))}
+          </div>
         ) : null}
       </div>
     </motion.div>

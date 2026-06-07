@@ -11,7 +11,7 @@ export default async function Home() {
   return (
     <div className="relative flex h-dvh w-full flex-col overflow-hidden">
       {/* Shared backdrop — covers the full page (incl. behind the translucent mast) */}
-      <BackgroundFX />
+      <BackgroundFX variant="landing" />
 
       {/* Sticky mast (outside the clipped/animated content so sticky works) */}
       <SiteMast />

@@ -38,35 +38,37 @@ function OrgPanel() {
   const members = memberships?.data ?? [];
 
   return (
-    <div className="border-t border-border px-3 pt-3 pb-1">
+    <div className="border-t border-border p-3 pb-2">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm transition-all hover:bg-black/[0.04] active:scale-[0.98]"
+        className="font-serif-ui flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-light text-slate-700 transition-all hover:bg-black/[0.04] active:scale-[0.98]"
       >
         {displayOrg.imageUrl ? (
           <Image
             src={displayOrg.imageUrl}
             alt={displayOrg.name}
-            width={20}
-            height={20}
+            width={22}
+            height={22}
             className="rounded-md object-cover ring-1 ring-black/10"
             unoptimized
           />
         ) : (
-          <Building2 className="h-4 w-4 shrink-0 text-muted" />
+          <Building2 className="h-4 w-4 shrink-0 text-slate-500" />
         )}
-        <span className="min-w-0 flex-1 truncate text-left font-medium text-foreground">
+        <span className="min-w-0 flex-1 truncate text-left">
           {displayOrg.name}
         </span>
         <ChevronDown
-          className={`h-3.5 w-3.5 shrink-0 text-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`h-3.5 w-3.5 shrink-0 text-slate-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
       {open && (
-        <div className="mt-1 mb-2 flex flex-col gap-0.5 px-1">
+        <div className="mt-1 flex flex-col gap-1">
           {members.length === 0 && (
-            <p className="px-2 py-1.5 text-xs text-muted">No members yet</p>
+            <p className="font-serif-ui rounded-lg px-2.5 py-2 text-sm font-light text-slate-500">
+              No members yet
+            </p>
           )}
           {members.map((m) => {
             const name = [m.publicUserData?.firstName, m.publicUserData?.lastName]
@@ -81,23 +83,23 @@ function OrgPanel() {
             return (
               <div
                 key={m.id}
-                className="flex items-center gap-2 rounded-lg px-2 py-1.5"
+                className="font-serif-ui flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-light text-slate-600"
               >
                 {avatar ? (
                   <Image
                     src={avatar}
                     alt={name}
-                    width={24}
-                    height={24}
+                    width={28}
+                    height={28}
                     className="rounded-full object-cover ring-1 ring-black/10"
                     unoptimized
                   />
                 ) : (
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0a66c2]/15 text-[10px] font-semibold text-[#0a66c2]">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#0a66c2]/15 text-[11px] font-semibold text-[#0a66c2]">
                     {initials}
                   </div>
                 )}
-                <span className="truncate text-xs text-foreground/80">{name}</span>
+                <span className="truncate">{name}</span>
               </div>
             );
           })}
