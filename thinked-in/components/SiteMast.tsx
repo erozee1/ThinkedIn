@@ -11,6 +11,7 @@ import logo from "@/public/thinkedinBACK.png";
 
 const NAV = [
   { label: "The Proof", href: "/proof" },
+  { label: "Self-Learning Layer", href: "/self-learning-layer" },
   { label: "Pricing", href: "/pricing" },
 ];
 
