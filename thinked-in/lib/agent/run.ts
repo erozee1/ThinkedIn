@@ -17,6 +17,8 @@ export interface RunAgentOptions {
   supa: SupabaseClient;
   /** Clerk-verified user id; all queries are scoped to it. */
   userId: string;
+  /** All queryable user ids: [userId] for solo users, org member ids for org users. */
+  userIds?: string[];
   mode: MessagesMode;
   /** Injected goal + recall context from Mubit + Supabase — prepended to the system prompt. */
   goalContext?: string;
@@ -50,6 +52,7 @@ export async function runAgent(opts: RunAgentOptions): Promise<void> {
   const ctx: ToolContext = {
     supa: opts.supa,
     userId: opts.userId,
+    userIds: opts.userIds ?? [opts.userId],
     collectCards: (cards) => collected.push(...cards),
   };
 

@@ -34,11 +34,21 @@ export default function ProfileCard({
         unoptimized
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-foreground">{person.name}</p>
+        <div className="flex items-center gap-2">
+          <p className="truncate font-medium text-foreground">{person.name}</p>
+          {person.fromTeam ? (
+            <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-600">
+              Org
+            </span>
+          ) : null}
+        </div>
         <p className="truncate text-sm text-muted">
           {person.position}
           {person.company ? ` · ${person.company}` : ""}
         </p>
+        {!compact && person.fromTeam ? (
+          <p className="truncate text-[11px] text-muted/75">From your organization network</p>
+        ) : null}
         {!compact && person.location ? (
           <p className="truncate text-xs text-muted/70">{person.location}</p>
         ) : null}

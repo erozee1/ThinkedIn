@@ -185,6 +185,8 @@ export interface ToolContext {
   supa: SupabaseClient;
   /** Clerk-verified user id; every query is scoped to it. */
   userId: string;
+  /** All queryable user ids: [userId] for solo, org member ids for org users. */
+  userIds: string[];
   /** Accumulates people surfaced by any tool, for the UI 'matches' cards. */
   collectCards: (cards: ProfileCardData[]) => void;
 }
@@ -195,7 +197,7 @@ export async function runTool(
   input: Record<string, unknown>,
   ctx: ToolContext,
 ): Promise<unknown> {
-  const { supa, userId, collectCards } = ctx;
+  const { supa, userId, userIds, collectCards } = ctx;
 
   switch (name) {
     case "save_goal": {
@@ -208,7 +210,7 @@ export async function runTool(
     case "search_by_meaning": {
       const rows = await searchByMeaning(
         supa,
-        userId,
+        userIds,
         String(input.query ?? ""),
         (input.filters as Filters) ?? {},
         typeof input.limit === "number" ? input.limit : 30,
@@ -220,7 +222,7 @@ export async function runTool(
       const mode = input.mode === "count" ? "count" : "list";
       const res = await queryByFilter(
         supa,
-        userId,
+        userIds,
         (input.filters as Filters) ?? {},
         mode,
         typeof input.limit === "number" ? input.limit : 40,
@@ -233,12 +235,12 @@ export async function runTool(
     }
     case "get_network_stats": {
       const g = (input.group_by as "industry" | "country" | "seniority" | "relationship_strength") ?? "industry";
-      return getNetworkStats(supa, userId, g);
+      return getNetworkStats(supa, userIds, g);
     }
     case "keyword_search": {
       const rows = await keywordSearch(
         supa,
-        userId,
+        userIds,
         (input.terms as string[]) ?? [],
         (input.fields as ("position" | "company" | "summary" | "skills")[]) ?? undefined,
         typeof input.limit === "number" ? input.limit : 40,
@@ -250,11 +252,11 @@ export async function runTool(
       const urls = (input.linkedin_urls as string[]) ?? [];
       const { data } = await supa
         .from("connections")
-        .select("id, first_name, last_name, position, company, location, country, seniority, industry, summary, linkedin_url, relationship_strength, last_contacted")
-        .eq("user_id", userId)
+        .select("id, user_id, first_name, last_name, position, company, location, country, seniority, industry, summary, linkedin_url, relationship_strength, last_contacted")
+        .in("user_id", userIds)
         .in("linkedin_url", urls);
       const rows = (data ?? []) as ConnectionRow[];
-      collectCards(rows.map(toCard));
+      collectCards(rows.map((r) => ({ ...toCard(r), fromTeam: r.user_id !== userId })));
 
       // Record each suggestion for outreach tracking and the promise-loop memory.
       if (rows.length) {

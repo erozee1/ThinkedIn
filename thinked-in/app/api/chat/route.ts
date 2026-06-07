@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runAgent, type AgentTurnInput } from "@/lib/agent/run";
 import type { MessagesMode } from "@/lib/agent/tools";
@@ -18,9 +18,26 @@ export const maxDuration = 60;
 // Auth: userId comes from Clerk's server-verified session. Every DB query is
 // scoped to it explicitly (service-role client), so data is isolated per user.
 export async function POST(request: NextRequest) {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
   if (!userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let userIds: string[] = [userId];
+  if (orgId) {
+    try {
+      const clerk = await clerkClient();
+      const memberships = await clerk.organizations.getOrganizationMembershipList({
+        organizationId: orgId,
+        limit: 50,
+      });
+      const memberIds = memberships.data
+        .map((m) => m.publicUserData?.userId)
+        .filter((id): id is string => Boolean(id));
+      if (memberIds.length > 0) userIds = memberIds;
+    } catch {
+      // Fall back to solo mode if org membership lookup fails.
+    }
   }
 
   let message = "";
@@ -68,6 +85,7 @@ export async function POST(request: NextRequest) {
         await runAgent({
           supa,
           userId,
+          userIds,
           mode,
           goalContext,
           message,
