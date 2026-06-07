@@ -7,8 +7,8 @@ export default function BackgroundFX({ light = false }: { light?: boolean }) {
       <div className="aurora" />
       {light ? (
         <>
-          <div className="absolute inset-0 bg-slate-950/10" />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.16)_0%,rgba(15,23,42,0.08)_34%,rgba(255,255,255,0.10)_100%)]" />
+          <div className="absolute inset-0 bg-slate-950/4" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.08)_0%,rgba(15,23,42,0.04)_34%,rgba(255,255,255,0.18)_100%)]" />
         </>
       ) : null}
 

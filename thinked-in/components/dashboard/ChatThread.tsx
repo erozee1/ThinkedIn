@@ -3,12 +3,18 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, Globe, Hash, Users, BarChart2, Loader2, MessageSquare, ScanSearch, Target } from "lucide-react";
-import type { ChatMessage, ToolCallInfo } from "@/lib/types";
+import type { ChatMessage, ProfileCardData, ToolCallInfo } from "@/lib/types";
 import ProfileCard from "@/components/ProfileCard";
 import PostCard from "@/components/dashboard/PostCard";
 import ThinkingDots from "@/components/ThinkingDots";
 
-export default function ChatThread({ messages }: { messages: ChatMessage[] }) {
+export default function ChatThread({
+  messages,
+  onCardClick,
+}: {
+  messages: ChatMessage[];
+  onCardClick?: (person: ProfileCardData) => void;
+}) {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -17,9 +23,9 @@ export default function ChatThread({ messages }: { messages: ChatMessage[] }) {
 
   return (
     <div className="scroll-slim flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-6 py-6">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-2.5 px-6 py-5">
         {messages.map((m) => (
-          <MessageBubble key={m.id} message={m} />
+          <MessageBubble key={m.id} message={m} onCardClick={onCardClick} />
         ))}
         <div ref={endRef} />
       </div>
@@ -27,7 +33,13 @@ export default function ChatThread({ messages }: { messages: ChatMessage[] }) {
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({
+  message,
+  onCardClick,
+}: {
+  message: ChatMessage;
+  onCardClick?: (person: ProfileCardData) => void;
+}) {
   const hasText = message.content.trim().length > 0;
   const hasMatches = Boolean(message.matches?.length);
   const hasToolCalls = Boolean(message.toolCalls?.length || message.toolNames?.length);
@@ -58,10 +70,10 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 
   if (message.kind === "thinking") {
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1">
         {hasText ? (
           <motion.div
-            className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass-strong px-4 py-3 text-[13px] leading-relaxed text-foreground/70"
+            className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass-strong px-4 py-3 text-[13px] text-foreground/70"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
@@ -85,13 +97,13 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         {message.pending && !hasText ? (
           <ThinkingDots label="thinkedin is thinking…" />
         ) : hasText ? (
-          <div className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass-strong px-4 py-3 text-[13px] leading-relaxed text-foreground">
+          <div className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass-strong px-4 py-3 text-[13px] text-foreground">
             <RichText text={message.content} />
           </div>
         ) : null}
 
         {message.matches?.length ? (
-          <div className="mt-3 grid max-w-xs grid-cols-2 gap-2">
+          <div className="mt-4 grid max-w-xs grid-cols-2 gap-2.5">
             {message.matches.map((person, i) => (
               <motion.div
                 key={person.id}
@@ -99,7 +111,17 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
               >
-                <ProfileCard person={person} />
+                {onCardClick ? (
+                  <button
+                    type="button"
+                    className="block w-full text-left"
+                    onClick={() => onCardClick(person)}
+                  >
+                    <ProfileCard person={person} asLink={false} />
+                  </button>
+                ) : (
+                  <ProfileCard person={person} />
+                )}
               </motion.div>
             ))}
           </div>
@@ -107,7 +129,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 
         {message.post ? (
           <motion.div
-            className="mt-3 sm:max-w-md"
+            className="mt-4 sm:max-w-md"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
           >
@@ -237,9 +259,9 @@ function ThinkingStep({ message }: { message: ChatMessage }) {
 
 function RichText({ text }: { text: string }) {
   return (
-    <>
+    <div className="space-y-1 text-[13px] leading-[1.4]">
       {text.split("\n").map((line, i) => (
-        <p key={i} className={line.trim() === "" ? "h-2" : ""}>
+        <p key={i} className={line.trim() === "" ? "h-1.5" : "m-0"}>
           {line.split(/(\*\*[^*]+\*\*)/g).map((part, j) =>
             part.startsWith("**") && part.endsWith("**") ? (
               <strong key={j} className="font-semibold text-foreground">
@@ -251,6 +273,6 @@ function RichText({ text }: { text: string }) {
           )}
         </p>
       ))}
-    </>
+    </div>
   );
 }
