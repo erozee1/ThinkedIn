@@ -18,11 +18,19 @@ const cspHeader = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  "upgrade-insecure-requests",
-].join("; ");
+  // Upgrading subresource requests breaks local http://localhost dev because
+  // the browser rewrites CSS/JS/image fetches to https://localhost.
+  !isDev ? "upgrade-insecure-requests" : null,
+]
+  .filter((directive): directive is string => Boolean(directive))
+  .join("; ");
 
 const nextConfig: NextConfig = {
   async headers() {
+    if (isDev) {
+      return [];
+    }
+
     return [
       {
         source: "/(.*)",
