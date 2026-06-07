@@ -407,26 +407,18 @@ export default function ResearchPage() {
                 Where we are today
               </p>
             </div>
-            <div className="ml-[88px] mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="ml-[88px] mb-12 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {traction.map((t) => (
                 <div key={t.label} className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3">
                   <p className="text-lg font-semibold text-emerald-700">{t.value}</p>
                   <p className="mt-0.5 text-xs leading-snug text-zinc-500">{t.label}</p>
                 </div>
               ))}
-            </div>
-
-            {/* Estimated monthly revenue */}
-            <div className="ml-[88px] mb-12 flex items-center justify-between gap-4 rounded-xl bg-emerald-600 px-5 py-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-emerald-100">
-                  Estimated monthly revenue
-                </p>
-                <p className="mt-0.5 text-[11px] leading-snug text-emerald-100/80">
-                  2 × £200 enterprise + 3 × $10/mo + $96/yr · USD at ~$1.27/£
-                </p>
+              {/* Estimated monthly revenue — sixth tile */}
+              <div className="rounded-xl bg-emerald-600 px-4 py-3">
+                <p className="text-lg font-semibold text-white">≈ £430/mo</p>
+                <p className="mt-0.5 text-xs leading-snug text-emerald-100">Estimated monthly revenue</p>
               </div>
-              <p className="shrink-0 text-2xl font-bold tracking-tight text-white">≈ £430<span className="text-base font-medium text-emerald-100">/mo</span></p>
             </div>
 
             {/* Live traction */}
