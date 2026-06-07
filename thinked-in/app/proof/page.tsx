@@ -107,13 +107,71 @@ const phases = [
   },
 ];
 
-const finalQuotes = [
-  "The internet has become searchable. Professional networks haven't.",
-  "Everyone has a network worth millions in collective expertise, but no way to query it.",
-  "LinkedIn stores your connections. We help you think with them.",
-  "What if your entire professional network became searchable, conversational, and instantly accessible?",
-  "Your network already knows the answer. We're building the interface to ask.",
-  "The future isn't AI replacing relationships — it's AI making relationships computable.",
+const productMilestones = [
+  {
+    step: "Call 01",
+    avatar: "https://randomuser.me/api/portraits/men/52.jpg",
+    person: "Founder's father & business partner",
+    context: "A business built on a large personal network",
+    tag: "Origin",
+    quote: "I started putting all of my contacts on the Excel sheet anyway.",
+    outcome:
+      "His ask — to talk to an AI that holds his entire personal network as context — became the seed of thinked-in. We shipped an MVP: upload a LinkedIn CSV, then reason across your whole network.",
+    recording: null,
+  },
+  {
+    step: "Call 02",
+    avatar: "https://randomuser.me/api/portraits/men/76.jpg",
+    person: "Thajudeen Shiraz",
+    context: "Design partner",
+    tag: "Product Feedback",
+    quote:
+      "Someone sends a document and asks, 'can you do this for me?' The document contains a project — I'd like to see across my network who can fulfil this work.",
+    outcome:
+      "He confirmed the core loop and surfaced two new asks: match incoming work to the right people, and share connections across a team — which we earmarked for enterprise.",
+    recording: null,
+  },
+  {
+    step: "Call 03",
+    avatar: "https://randomuser.me/api/portraits/men/76.jpg",
+    person: "Thajudeen Shiraz",
+    context: "Design partner → first paying customer",
+    tag: "Enterprise · Signed",
+    quote: "Nobody is ever going to put their whole thing on the company.",
+    outcome:
+      "Thajudeen signed an enterprise contract, paying in advance for our enterprise build. His warning became a core requirement: granular control over which connections are shared on a company plan.",
+    recording: null,
+  },
+  {
+    step: "Note",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    person: "Thomas Panton",
+    context: "Founder, Morpheus · AI associate for private markets",
+    tag: "External Validation",
+    quote:
+      "By the way, this is actually very relevant to the network connector we want to build at Morpheus.",
+    outcome:
+      "Unprompted confirmation that the network-intelligence use case resonates inside other enterprises — not just our design partner's.",
+    recording: null,
+  },
+  {
+    step: "Call 04",
+    avatar: "https://randomuser.me/api/portraits/men/41.jpg",
+    person: "CEO · enterprise prospect",
+    context: "Outbound to Australia, across time zones",
+    tag: "Enterprise · Signed",
+    quote: null,
+    outcome:
+      "Closed our 2nd enterprise procurement in under a day — £200 each in committed spend. He requested live monitoring, echoing earlier feedback from our design partner.",
+    recording:
+      "https://web.plaud.ai/s/pub_4d3b57c0-8b07-4d5c-bb04-d325562f8fc5::lmoJE-LJ2H7u4WZ_98S3-I0ACW8hKkq-3pcB2iSmlG2ZUAac4KJZRQitluTcPQJta4g5HNoy_RuJyPvfs5wC",
+  },
+];
+
+const traction = [
+  { value: "2", label: "Enterprise contracts signed" },
+  { value: "£200", label: "Committed per contract, upfront" },
+  { value: "< 24h", label: "First contact to 2nd close" },
 ];
 
 const colorMap = {
@@ -149,8 +207,8 @@ export default function ResearchPage() {
             The Road to thinked-in
           </h1>
           <p className="mx-auto max-w-md text-base leading-relaxed text-zinc-500">
-            Seven conversations across three pivots — from tender automation to
-            network intelligence.
+            A dozen conversations across three pivots — from tender automation to
+            network intelligence, and our first paying enterprise customers.
           </p>
           <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-zinc-400">
             Click the
@@ -275,29 +333,80 @@ export default function ResearchPage() {
                   Chat with your Network
                 </h2>
                 <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
-                  The most valuable opportunities weren&apos;t hidden on the internet — they were hidden inside existing networks.
+                  The most valuable opportunities weren&apos;t hidden on the internet — they were hidden inside existing networks. So we built thinked-in, and took it back to the people who needed it.
                 </p>
               </div>
             </div>
 
-            <div className="ml-[88px] grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {finalQuotes.map((quote, i) => (
-                <div key={i} className="border-l-2 border-emerald-400 pl-4 py-1">
-                  <p className="text-sm italic leading-relaxed text-emerald-900">
-                    &ldquo;{quote}&rdquo;
-                  </p>
+            {/* Section label */}
+            <div className="ml-[88px] mb-6">
+              <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
+                From first conversation to paying enterprises
+              </p>
+            </div>
+
+            {/* Product milestone sub-timeline */}
+            <div className="flex flex-col gap-6 mb-10">
+              {productMilestones.map((m) => (
+                <div key={m.step + m.person} className="relative flex items-start gap-4">
+                  {/* Avatar as timeline node */}
+                  <div className="flex w-[72px] shrink-0 justify-center">
+                    <img
+                      src={m.avatar}
+                      alt={m.person}
+                      className="relative z-10 h-[72px] w-[72px] rounded-full object-cover ring-4 ring-white shadow-sm"
+                    />
+                  </div>
+                  {/* Content */}
+                  <div className="flex-1 pt-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
+                      <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+                        {m.step}
+                      </span>
+                      <span className="text-sm font-semibold text-zinc-900">{m.person}</span>
+                      <span className="text-xs text-zinc-400">{m.context}</span>
+                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                        {m.tag}
+                      </span>
+                      {m.recording && (
+                        <a
+                          href={m.recording}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
+                        >
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+                          </span>
+                          Listen
+                        </a>
+                      )}
+                    </div>
+                    {m.quote && (
+                      <p className="border-l-2 border-emerald-300 pl-3 text-sm italic leading-relaxed text-zinc-700">
+                        &ldquo;{m.quote}&rdquo;
+                      </p>
+                    )}
+                    <p className="mt-2 flex gap-2 text-sm leading-relaxed text-zinc-500">
+                      <span className="text-emerald-500" aria-hidden>→</span>
+                      <span>{m.outcome}</span>
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
 
-            {/* End cap */}
-            <div className="mt-12 ml-[88px] rounded-xl bg-zinc-900 px-6 py-6 text-center">
-              <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-2">
-                The Product
-              </p>
-              <p className="text-lg font-semibold text-white tracking-tight">thinked-in</p>
-              <p className="mt-1 text-sm text-zinc-400">Your network, made conversational.</p>
+            {/* Traction strip */}
+            <div className="ml-[88px] mb-12 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {traction.map((t) => (
+                <div key={t.label} className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3">
+                  <p className="text-lg font-semibold text-emerald-700">{t.value}</p>
+                  <p className="mt-0.5 text-xs leading-snug text-zinc-500">{t.label}</p>
+                </div>
+              ))}
             </div>
+
           </div>
         </div>
       </div>
