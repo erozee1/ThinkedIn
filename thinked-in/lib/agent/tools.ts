@@ -11,6 +11,7 @@ import {
 } from "./retrieval";
 import { toCard } from "./cards";
 import { mubitRemember, mubitRecordSuggestions } from "../mubit";
+import { researchPerson } from "./research";
 import type { ProfileCardData } from "../types";
 
 export type MessagesMode = "full" | "metadata" | "none";
@@ -153,6 +154,30 @@ export function toolsForMode(mode: MessagesMode): Anthropic.Tool[] {
       },
     });
   }
+
+  // Only expose research_person when a Tavily key is available.
+  if (process.env.TAVILY_API_KEY) {
+    tools.push({
+      name: "research_person",
+      description:
+        "Deep-dive research on a specific connection: pulls their recent news coverage, blog posts and articles, " +
+        "GitHub / open-source work, and talk or podcast appearances from the public web. " +
+        "Call this AFTER narrowing to a shortlist (1–3 people) when you need external evidence to " +
+        "choose who to recommend or to give the user a richer 'why this person' answer. " +
+        "DO NOT call it during initial broad searches — only for people you are seriously considering. " +
+        "Use the findings to cite real, specific things: a recent post, a project, a talk topic.",
+      input_schema: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "Full name of the person." },
+          company: { type: "string", description: "Their current company (improves search precision)." },
+          role: { type: "string", description: "Their title or area of work (optional)." },
+        },
+        required: ["name"],
+      },
+    });
+  }
+
   return tools;
 }
 
@@ -258,6 +283,17 @@ export async function runTool(
         subject: h.subject,
         snippet: h.content?.slice(0, 280) ?? null,
       }));
+    }
+    case "research_person": {
+      const brief = await researchPerson({
+        name: String(input.name ?? ""),
+        company: input.company ? String(input.company) : undefined,
+        role: input.role ? String(input.role) : undefined,
+      });
+      if (!brief.available) {
+        return { error: "research_person unavailable — use web_search directly instead." };
+      }
+      return brief;
     }
     default:
       return { error: `unknown tool ${name}` };

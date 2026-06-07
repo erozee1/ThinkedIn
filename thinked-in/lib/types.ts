@@ -37,7 +37,10 @@ export interface Connection {
 export type ProfileCardData = Pick<
   Connection,
   "id" | "name" | "position" | "company" | "location" | "avatarUrl" | "linkedinUrl"
->;
+> & {
+  /** True when the connection belongs to an org team member rather than the requesting user. */
+  fromTeam?: boolean;
+};
 
 export type ChatRole = "user" | "assistant";
 
@@ -48,6 +51,14 @@ export interface PostData {
   body: string;
 }
 
+/** Structured info about a single tool call, forwarded from the agent to the client. */
+export interface ToolCallInfo {
+  name: string;
+  input: Record<string, unknown>;
+  resultCount: number | null;
+  /** True while the tool is still executing; cleared when tool_result arrives. */
+  loading?: boolean;
+}
 export interface ChatMessage {
   id: string;
   role: ChatRole;
@@ -60,6 +71,8 @@ export interface ChatMessage {
   kind?: "thinking" | "answer";
   /** Tools called during this turn — populated for kind="thinking" messages. */
   toolNames?: string[];
+  /** Rich tool call details (supersedes toolNames when present). */
+  toolCalls?: ToolCallInfo[];
   /** Matched people the assistant surfaced inline with this reply. */
   matches?: ProfileCardData[];
   /** A drafted post/message the assistant surfaced. */

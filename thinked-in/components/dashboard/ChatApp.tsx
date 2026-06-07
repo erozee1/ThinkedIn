@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useUser } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
-import type { ChatMessage, ChatSession, PostData, ProfileCardData } from "@/lib/types";
+import type { ChatMessage, ChatSession, PostData, ProfileCardData, ToolCallInfo } from "@/lib/types";
 import { loadSessions, saveSessions } from "@/lib/sessions-store";
 import logo from "@/public/thinkedinBACK.png";
 import BackgroundFX from "@/components/BackgroundFX";
@@ -274,8 +274,43 @@ async function streamReply(
   let stepMsgId = assistantId;
   let turnCount = 0;
 
-  const updateCurrent = (patch: (m: ChatMessage) => ChatMessage) =>
-    patchActive((msgs) => msgs.map((m) => (m.id === stepMsgId ? patch(m) : m)));
+  const patchMessage = (messageId: string, patch: (m: ChatMessage) => ChatMessage) =>
+    patchActive((msgs) => msgs.map((m) => (m.id === messageId ? patch(m) : m)));
+
+  const updateCurrent = (patch: (m: ChatMessage) => ChatMessage) => {
+    const currentId = stepMsgId;
+    patchMessage(currentId, patch);
+  };
+
+  const hasRenderablePayload = (msg: ChatMessage, toolCount = msg.toolCalls?.length ?? 0) =>
+    msg.content.trim().length > 0 ||
+    Boolean(msg.matches?.length) ||
+    Boolean(msg.post) ||
+    toolCount > 0;
+
+  const finalizeMessage = (messageId: string, tools: ToolCallInfo[]) =>
+    patchActive((msgs) =>
+      msgs.flatMap((msg) => {
+        if (msg.id !== messageId) return [msg];
+        if (!hasRenderablePayload(msg, tools.length)) return [];
+        return [{
+          ...msg,
+          pending: false,
+          kind: tools.length > 0 ? "thinking" : "answer",
+          toolNames: tools.length > 0 ? tools.map((tool) => tool.name) : undefined,
+          toolCalls: tools.length > 0 ? tools : undefined,
+        }];
+      }),
+    );
+
+  const clearPendingState = (messageId: string) =>
+    patchActive((msgs) =>
+      msgs.flatMap((msg) => {
+        if (msg.id !== messageId) return [msg];
+        if (!hasRenderablePayload(msg)) return [];
+        return [{ ...msg, pending: false }];
+      }),
+    );
 
   while (true) {
     const { done, value } = await reader.read();
@@ -290,8 +325,10 @@ async function streamReply(
 
       const event = JSON.parse(line) as
         | { type: "turn_start" }
-        | { type: "turn_end"; tools: string[] }
+        | { type: "turn_end"; tools: ToolCallInfo[] }
         | { type: "delta"; text: string }
+        | { type: "tool_call"; name: string; input: Record<string, unknown> }
+        | { type: "tool_result"; name: string; resultCount: number | null }
         | { type: "matches"; matches: ProfileCardData[] }
         | { type: "post"; post: PostData };
 
@@ -310,14 +347,40 @@ async function streamReply(
         }
         turnCount++;
       } else if (event.type === "turn_end") {
-        updateCurrent((m) => ({
-          ...m,
-          pending: false,
-          kind: event.tools.length > 0 ? "thinking" : "answer",
-          toolNames: event.tools.length > 0 ? event.tools : undefined,
-        }));
+        const currentId = stepMsgId;
+        finalizeMessage(currentId, event.tools);
       } else if (event.type === "delta") {
         updateCurrent((m) => ({ ...m, content: m.content + event.text }));
+      } else if (event.type === "tool_call") {
+        updateCurrent((m) => ({
+          ...m,
+          kind: "thinking",
+          toolCalls: [
+            ...(m.toolCalls ?? []),
+            { name: event.name, input: event.input, resultCount: null, loading: true },
+          ],
+        }));
+      } else if (event.type === "tool_result") {
+        updateCurrent((m) => {
+          const toolCalls = [...(m.toolCalls ?? [])];
+          for (let i = toolCalls.length - 1; i >= 0; i--) {
+            if (toolCalls[i]?.name === event.name && toolCalls[i]?.loading) {
+              toolCalls[i] = {
+                ...toolCalls[i],
+                resultCount: event.resultCount,
+                loading: false,
+              };
+              return { ...m, toolCalls };
+            }
+          }
+          toolCalls.push({
+            name: event.name,
+            input: {},
+            resultCount: event.resultCount,
+            loading: false,
+          });
+          return { ...m, toolCalls };
+        });
       } else if (event.type === "matches") {
         updateCurrent((m) => ({ ...m, matches: event.matches }));
       } else if (event.type === "post") {
@@ -327,5 +390,5 @@ async function streamReply(
   }
 
   // Ensure the last message is never left pending (guards against stream errors).
-  updateCurrent((m) => ({ ...m, pending: false }));
+  clearPendingState(stepMsgId);
 }

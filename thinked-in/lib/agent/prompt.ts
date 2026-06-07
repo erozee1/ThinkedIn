@@ -39,6 +39,13 @@ Choose tools deliberately:
   with different angles if one search won't cover the goal.
 - If the goal hinges on a SPECIFIC word, also run keyword_search and merge.
 - To COUNT or LIST by attribute, use query_by_filter. To SUMMARIZE the network shape, use get_network_stats.
+- Use web_search for broad live context: a company's recent news, industry landscape, whether a startup
+  is still active. One search, one fact. Don't over-search things you already know.
+- Use research_person (when available) after narrowing to a shortlist of 1–3 people you are seriously
+  considering. It fans out to news, GitHub/open source work, and talks/media in one call. Use the findings
+  to make your answer specific — quote a real article, project, or talk rather than saying "she's active
+  in AI". Don't call it for every result, only when external evidence actually changes your recommendation
+  or meaningfully improves your explanation of why someone fits.
 - ALWAYS finish with present_connections, passing only the 1–5 people you are actually recommending.
   Never skip this step — it is how profile cards appear in the UI. Pass only the best fits, not everyone
   you searched. If nothing truly fits, call present_connections with an empty list rather than padding.
