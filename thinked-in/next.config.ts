@@ -10,13 +10,16 @@ const cspHeader = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   // All avatar / image sources used across public and dashboard routes
-  "img-src 'self' data: blob: https://unavatar.io https://api.dicebear.com https://randomuser.me https://i.pravatar.cc https://img.clerk.com",
+  // www.google.com is the Google favicon service used in the web sources strip
+  "img-src 'self' data: blob: https://unavatar.io https://api.dicebear.com https://randomuser.me https://i.pravatar.cc https://img.clerk.com https://www.google.com",
   "font-src 'self' data:",
   // Supabase realtime (wss) + Clerk frontend API
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.clerk.com https://*.clerk.accounts.dev https://clerk.com",
+  // Clerk SignIn/SignUp render inside a hosted iframe — must be explicitly allowed
+  "frame-src 'self' https://*.clerk.accounts.dev https://accounts.clerk.com https://clerk.com",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  "form-action 'self' https://*.clerk.accounts.dev https://accounts.clerk.com",
   "frame-ancestors 'none'",
   // Upgrading subresource requests breaks local http://localhost dev because
   // the browser rewrites CSS/JS/image fetches to https://localhost.
