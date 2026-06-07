@@ -1,8 +1,9 @@
 -- Vector-search RPCs. Run AFTER schema.sql. Re-run this whole file to update.
--- Scoped explicitly by p_user_id (the Clerk-verified user id passed from the API).
+-- Scoped explicitly by p_user_ids (the Clerk-verified user ids passed from the API).
+-- p_user_ids contains [userId] for solo users and all org member ids for org members.
 
 create or replace function match_connections(
-  p_user_id text,
+  p_user_ids text[],
   query_embedding vector(1536),
   match_count int default 20,
   filter_country text default null,
@@ -14,6 +15,7 @@ create or replace function match_connections(
 )
 returns table (
   id uuid,
+  user_id text,
   first_name text,
   last_name text,
   "position" text,
@@ -32,13 +34,13 @@ returns table (
 language sql
 stable
 as $$
-  select c.id, c.first_name, c.last_name, c.position, c.company,
+  select c.id, c.user_id, c.first_name, c.last_name, c.position, c.company,
          c.location, c.country, c.seniority, c.industry, c.summary,
          c.linkedin_url, c.relationship_strength, c.last_contacted,
          c.message_count,
          (c.embedding <=> query_embedding) as distance
   from connections c
-  where c.user_id = p_user_id
+  where c.user_id = any(p_user_ids)
     and c.enrichment_status = 'enriched'
     and c.embedding is not null
     and (filter_country is null or c.country_norm = lower(filter_country))

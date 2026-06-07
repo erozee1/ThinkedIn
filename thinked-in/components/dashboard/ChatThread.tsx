@@ -17,7 +17,7 @@ export default function ChatThread({ messages }: { messages: ChatMessage[] }) {
 
   return (
     <div className="scroll-slim flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-8">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-6 py-6">
         {messages.map((m) => (
           <MessageBubble key={m.id} message={m} />
         ))}
@@ -90,8 +90,8 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           </div>
         ) : null}
 
-        {message.matches && message.matches.length > 0 && (
-          <div className="mt-3 flex flex-col gap-2 sm:max-w-md">
+        {message.matches?.length ? (
+          <div className="mt-3 grid max-w-xs grid-cols-2 gap-2">
             {message.matches.map((person, i) => (
               <motion.div
                 key={person.id}
@@ -103,9 +103,9 @@ function MessageBubble({ message }: { message: ChatMessage }) {
               </motion.div>
             ))}
           </div>
-        )}
+        ) : null}
 
-        {message.post && (
+        {message.post ? (
           <motion.div
             className="mt-3 sm:max-w-md"
             initial={{ opacity: 0, y: 8 }}
@@ -113,7 +113,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           >
             <PostCard post={message.post} />
           </motion.div>
-        )}
+        ) : null}
       </div>
     </motion.div>
   );
@@ -218,7 +218,7 @@ function ThinkingStep({ message }: { message: ChatMessage }) {
                   <Icon className="h-3 w-3 shrink-0 text-zinc-400" />
                 )}
                 <span className={call.loading ? "text-[#0a66c2]" : undefined}>{primary}</span>
-                {!call.loading && count && <span className="text-zinc-400">· {count}</span>}
+                {!call.loading && count ? <span className="text-zinc-400">· {count}</span> : null}
               </span>
             );
           })

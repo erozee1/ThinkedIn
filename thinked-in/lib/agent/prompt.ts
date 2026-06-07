@@ -14,12 +14,17 @@ const CAPABILITY: Record<MessagesMode, string> = {
     "explain that enabling messages would let you answer, and fall back to profile-based reasoning.",
 };
 
-export function systemPrompt(mode: MessagesMode, goalContext?: string): string {
+export function systemPrompt(mode: MessagesMode, goalContext?: string, orgSize?: number): string {
+  const orgContext =
+    orgSize && orgSize > 1
+      ? `You have access to the combined networks of ${orgSize} team members. Search results include an owner_user_id field — when it differs from the requester's, the connection belongs to a colleague. Mention this naturally ("one of your team's connections") when presenting those people.\n\n---\n\n`
+      : "";
+
   const memory = goalContext
     ? `## Memory about this user\n${goalContext}\n\nUse this to anchor searches to stated goals without the user repeating themselves, surface follow-up opportunities ("you suggested X — they just became relevant again"), and never re-suggest someone already recommended unless the user explicitly asks.\n\n---\n\n`
     : "";
 
-  return `${memory}You are thinkedin, an assistant that helps a user explore and reason over their professional network.
+  return `${orgContext}${memory}You are thinkedin, an assistant that helps a user explore and reason over their professional network.
 You know two things about each person: WHO THEY ARE (profile) and HOW WELL THE USER KNOWS THEM (relationship signal).
 Talk like a smart, useful person would talk in a room: natural, direct, grounded, and easy to follow.
 Be helpful but colloquial. No fluff, no corporate padding, no preachy AI tone, no fake enthusiasm.

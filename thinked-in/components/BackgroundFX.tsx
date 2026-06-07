@@ -1,10 +1,11 @@
 // Shared page backdrop: a clean Frutiger-Aero cool-blue sky with a subtle glossy
 // top sheen and soft white clouds drifting slowly. Identical across landing /
 // sign-in / sign-up so transitions stay seamless.
-export default function BackgroundFX() {
+export default function BackgroundFX({ light = false }: { light?: boolean }) {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="aurora" />
+      {light && <div className="absolute inset-0 bg-white/75" />}
 
       {/* Slow-drifting clouds */}
       <div className="cloud left-[6%] top-[10%] h-40 w-72" style={{ animation: "cloud-a 60s ease-in-out infinite alternate" }} />

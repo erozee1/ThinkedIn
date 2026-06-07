@@ -15,13 +15,15 @@ export interface AgentTurnInput {
 
 export interface RunAgentOptions {
   supa: SupabaseClient;
-  /** Clerk-verified user id; all queries are scoped to it. */
+  /** Clerk-verified user id of the requester. */
   userId: string;
   /** All queryable user ids: [userId] for solo users, org member ids for org users. */
   userIds?: string[];
   mode: MessagesMode;
   /** Injected goal + recall context from Mubit + Supabase — prepended to the system prompt. */
   goalContext?: string;
+  /** Number of org members (>1 activates org-aware system prompt). */
+  orgSize?: number;
   message: string;
   history?: AgentTurnInput[];
   /** Called at the start of each model turn so the client can create a new message bubble. */
@@ -43,10 +45,18 @@ export interface RunAgentOptions {
  * Drives the Claude tool-use loop over the user's network. Shared by the chat
  * route (streams to the client) and the CLI test harness (prints to console).
  */
+const WEB_SEARCH_TOOL: Anthropic.WebSearchTool20250305 = {
+  type: "web_search_20250305",
+  name: "web_search",
+};
+
 export async function runAgent(opts: RunAgentOptions): Promise<void> {
   const anthropic = opts.anthropic ?? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const tools = toolsForMode(opts.mode);
-  const system = systemPrompt(opts.mode, opts.goalContext);
+  const tools: (Anthropic.Tool | Anthropic.WebSearchTool20250305)[] = [
+    WEB_SEARCH_TOOL,
+    ...toolsForMode(opts.mode),
+  ];
+  const system = systemPrompt(opts.mode, opts.goalContext, opts.orgSize);
 
   const collected: ProfileCardData[] = [];
   const ctx: ToolContext = {
@@ -69,7 +79,13 @@ export async function runAgent(opts: RunAgentOptions): Promise<void> {
     const msg = await turn.finalMessage();
 
     const toolUses = msg.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
-    const toolInfos: ToolCallInfo[] = [];
+    const serverToolUses = msg.content.filter((b): b is Anthropic.ServerToolUseBlock => b.type === "server_tool_use");
+
+    const toolInfos: ToolCallInfo[] = serverToolUses.map((tu) => ({
+      name: tu.name,
+      input: tu.input as Record<string, unknown>,
+      resultCount: null,
+    }));
 
     if (toolUses.length === 0) {
       opts.onTurnEnd?.(toolInfos);

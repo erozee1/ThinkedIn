@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Expand userIds to all org members when the user is in an org.
   let userIds: string[] = [userId];
   if (orgId) {
     try {
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
         .filter((id): id is string => Boolean(id));
       if (memberIds.length > 0) userIds = memberIds;
     } catch {
-      // Fall back to solo mode if org membership lookup fails.
+      // Fall back to solo if org fetch fails — never block the chat request.
     }
   }
 
@@ -86,6 +87,7 @@ export async function POST(request: NextRequest) {
           supa,
           userId,
           userIds,
+          orgSize: userIds.length,
           mode,
           goalContext,
           message,

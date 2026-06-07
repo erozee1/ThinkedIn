@@ -59,6 +59,7 @@ export interface ToolCallInfo {
   /** True while the tool is still executing; cleared when tool_result arrives. */
   loading?: boolean;
 }
+
 export interface ChatMessage {
   id: string;
   role: ChatRole;

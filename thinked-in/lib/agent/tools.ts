@@ -183,7 +183,7 @@ export function toolsForMode(mode: MessagesMode): Anthropic.Tool[] {
 
 export interface ToolContext {
   supa: SupabaseClient;
-  /** Clerk-verified user id; every query is scoped to it. */
+  /** Clerk-verified user id of the requester — used for writes only. */
   userId: string;
   /** All queryable user ids: [userId] for solo, org member ids for org users. */
   userIds: string[];
@@ -315,5 +315,6 @@ function summarizeRow(r: ConnectionRow) {
     last_contacted: r.last_contacted,
     summary: r.summary?.slice(0, 200) ?? null,
     linkedin_url: r.linkedin_url,
+    owner_user_id: r.user_id ?? null,
   };
 }

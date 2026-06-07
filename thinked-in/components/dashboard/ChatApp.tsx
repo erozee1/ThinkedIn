@@ -165,14 +165,13 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
 
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-background">
-      {/* Mobile drawer backdrop */}
-      {navOpen && (
+      {navOpen ? (
         <div
           className="fixed inset-0 z-30 bg-black/30 md:hidden"
           aria-hidden
           onClick={() => setNavOpen(false)}
         />
-      )}
+      ) : null}
 
       <ChatSidebar
         sessions={sessions}
@@ -186,7 +185,6 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
       />
 
       <main className="relative flex min-w-0 flex-1 flex-col">
-        {/* Mobile top bar with menu toggle */}
         <div className="relative z-10 flex items-center gap-3 border-b border-border bg-surface/85 px-4 py-3 backdrop-blur md:hidden">
           <button
             onClick={() => setNavOpen(true)}
@@ -198,7 +196,7 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
           <Image src={logo} alt="thinkedin" className="h-6 w-auto" />
         </div>
 
-        <BackgroundFX />
+        <BackgroundFX light />
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           {active.messages.length === 0 ? (
             <EmptyState
@@ -214,8 +212,6 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
     </div>
   );
 }
-
-/* -------------------------------------------------------------------------- */
 
 function EmptyState({
   name,
@@ -355,10 +351,8 @@ async function streamReply(
 
       if (event.type === "turn_start") {
         if (turnCount === 0) {
-          // First turn reuses the placeholder message already in the session.
           stepMsgId = assistantId;
         } else {
-          // Subsequent turns get a fresh message appended to the session.
           const newId = uid();
           stepMsgId = newId;
           patchActive((msgs) => [

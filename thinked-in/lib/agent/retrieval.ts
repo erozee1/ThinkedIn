@@ -1,9 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { embedOne, toVectorLiteral } from "../embeddings";
 
-// Every function takes the Clerk-verified userId and scopes all queries to it
-// explicitly (service-role client). Filters are fuzzy by design (normalized
-// columns + ilike) so they don't silently return zero rows.
+// Every function takes userIds (all Clerk user ids to query) and scopes all
+// queries to that set explicitly (service-role client). For solo users this is
+// [userId]; for org members it includes all org member ids. Filters are fuzzy
+// by design (normalized columns + ilike) so they don't silently return zero rows.
 
 export interface ConnectionRow {
   id: string;
@@ -155,7 +156,7 @@ export async function keywordSearch(
     const safe = t.replace(/[%,()]/g, " ").trim();
     if (!safe) continue;
     for (const f of fields) {
-      if (f === "skills") ors.push(`skills.cs.{${safe}}`); // array contains
+      if (f === "skills") ors.push(`skills.cs.{${safe}}`);
       else ors.push(`${f}.ilike.%${safe}%`);
     }
   }
