@@ -58,6 +58,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.font-helvetica-ui {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.font-serif-ui {
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
+
 /* ---------------------------------------------------------------------------
  * Aurora — subtle light-slate wash over the page.
  * ------------------------------------------------------------------------- */

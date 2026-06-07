@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { UserButton, useOrganization, useOrganizationList } from "@clerk/nextjs";
 import logo from "@/public/thinkedinBACK.png";
-import { Building2, ChevronDown, MessagesSquare, Plus, RotateCcw, Settings, Sparkles, Trash2, X } from "lucide-react";
+import { Building2, ChevronDown, Plus, RotateCcw, Settings, Sparkles, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import type { ChatSession } from "@/lib/types";
 
@@ -167,7 +167,7 @@ export default function ChatSidebar({
       <div className="px-3">
         <button
           onClick={newChat}
-          className="flex w-full items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-black/[0.04] hover:shadow-sm active:scale-[0.98]"
+          className="font-serif-ui flex w-full items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-sm font-light text-slate-700 transition-all hover:bg-black/[0.04] hover:shadow-sm active:scale-[0.98]"
         >
           <Plus className="h-4 w-4" />
           New chat
@@ -183,17 +183,16 @@ export default function ChatSidebar({
           {sessions.map((s) => (
             <div
               key={s.id}
-              className={`group flex items-center gap-2 rounded-lg px-2 py-1 text-left text-sm transition-all ${
+              className={`font-serif-ui group flex items-center gap-2 rounded-lg px-2 py-1 text-left text-sm font-light transition-all ${
                 s.id === activeId
-                  ? "bg-[#0a66c2]/10 font-medium text-[#0a66c2]"
-                  : "text-muted hover:bg-black/[0.04] hover:text-foreground"
+                  ? "bg-slate-700/10 text-slate-700"
+                  : "text-slate-600 hover:bg-black/[0.04] hover:text-slate-700"
               }`}
             >
               <button
                 onClick={() => select(s.id)}
-                className="flex min-w-0 flex-1 items-center gap-2 truncate rounded-md px-0.5 py-1 active:scale-[0.98]"
+                className="flex min-w-0 flex-1 truncate rounded-md px-0.5 py-1 active:scale-[0.98]"
               >
-                <MessagesSquare className="h-3.5 w-3.5 shrink-0 opacity-70" />
                 <span className="truncate">{s.title}</span>
               </button>
               <button
@@ -221,28 +220,28 @@ export default function ChatSidebar({
             onReimport();
             onClose();
           }}
-          className="mb-1 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted transition-all hover:bg-black/[0.04] hover:text-foreground active:scale-[0.98]"
+          className="font-serif-ui mb-1 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-light text-slate-600 transition-all hover:bg-black/[0.04] hover:text-slate-700 active:scale-[0.98]"
         >
           <RotateCcw className="h-4 w-4" />
           Update network
         </button>
         <Link
           href="/billing"
-          className="mb-1 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted transition-all hover:bg-black/[0.04] hover:text-foreground active:scale-[0.98]"
+          className="font-serif-ui mb-1 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-light text-slate-600 transition-all hover:bg-black/[0.04] hover:text-slate-700 active:scale-[0.98]"
         >
           <Settings className="h-4 w-4" />
           Billing & plan
         </Link>
         <Link
           href="/pricing"
-          className="mb-2 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-[#0a66c2] transition-all hover:bg-[#0a66c2]/[0.06] active:scale-[0.98]"
+          className="font-serif-ui mb-2 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-light text-slate-700 transition-all hover:bg-slate-700/[0.06] hover:text-slate-800 active:scale-[0.98]"
         >
           <Sparkles className="h-4 w-4" />
           Upgrade
         </Link>
         <div className="flex items-center gap-2 rounded-lg px-1 py-1">
           <UserButton appearance={{ elements: { userButtonAvatarBox: "h-8 w-8" } }} />
-          <span className="text-sm text-muted">Account</span>
+          <span className="font-serif-ui text-sm font-light text-slate-600">Account</span>
         </div>
       </div>
     </aside>

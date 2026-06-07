@@ -223,16 +223,16 @@ function EmptyState({
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
       <motion.h1
-        className="text-3xl font-semibold text-white drop-shadow-[0_2px_10px_rgba(12,74,140,0.4)]"
+        className="font-serif-ui text-3xl font-light tracking-[0.01em] text-slate-700"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         {name ? `Hi ${name}, ` : "Hi, "}
-        <span className="text-white/85">talk to your network</span>
+        <span className="text-slate-600">talk to your network</span>
       </motion.h1>
       <motion.p
-        className="mt-2 max-w-md text-white/85 drop-shadow-[0_1px_8px_rgba(12,74,140,0.35)]"
+        className="font-serif-ui mt-2 max-w-md text-base font-light leading-relaxed text-slate-600"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut", delay: 0.08 }}
