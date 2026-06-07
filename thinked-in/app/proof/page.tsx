@@ -227,7 +227,7 @@ export default function ResearchPage() {
             User Research · June 2026
           </p>
           <h1 className="mb-4 text-4xl font-semibold tracking-tight text-zinc-900">
-            The Road to thinked-in
+            The Road to thinkedin
           </h1>
           <p className="mx-auto max-w-md text-base leading-relaxed text-zinc-500">
             A dozen conversations across three pivots — from tender automation to
