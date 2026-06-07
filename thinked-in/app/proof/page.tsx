@@ -169,9 +169,11 @@ const productMilestones = [
 ];
 
 const traction = [
-  { value: "2", label: "Enterprise contracts signed" },
-  { value: "£200", label: "Committed per contract, upfront" },
-  { value: "< 24h", label: "First contact to 2nd close" },
+  { value: "30", label: "Users on the platform" },
+  { value: "3 × $10/mo", label: "Monthly paying customers" },
+  { value: "1 × $96/yr", label: "Annual paying customer" },
+  { value: "2 × £200/mo", label: "Enterprise contracts" },
+  { value: "1", label: "Letter of intent" },
 ];
 
 const colorMap = {
@@ -398,13 +400,31 @@ export default function ResearchPage() {
             </div>
 
             {/* Traction strip */}
-            <div className="ml-[88px] mb-12 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="ml-[88px] mb-4">
+              <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
+                Where we are today
+              </p>
+            </div>
+            <div className="ml-[88px] mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {traction.map((t) => (
                 <div key={t.label} className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3">
                   <p className="text-lg font-semibold text-emerald-700">{t.value}</p>
                   <p className="mt-0.5 text-xs leading-snug text-zinc-500">{t.label}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Estimated monthly revenue */}
+            <div className="ml-[88px] mb-12 flex items-center justify-between gap-4 rounded-xl bg-emerald-600 px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-emerald-100">
+                  Estimated monthly revenue
+                </p>
+                <p className="mt-0.5 text-[11px] leading-snug text-emerald-100/80">
+                  2 × £200 enterprise + 3 × $10/mo + $96/yr · USD at ~$1.27/£
+                </p>
+              </div>
+              <p className="shrink-0 text-2xl font-bold tracking-tight text-white">≈ £430<span className="text-base font-medium text-emerald-100">/mo</span></p>
             </div>
 
           </div>
