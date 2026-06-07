@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useUser } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
-import type { ChatMessage, ChatSession, PostData, ProfileCardData, ToolCallInfo } from "@/lib/types";
+import type { ChatMessage, ChatSession, LinkedInPostData, PostData, ProfileCardData, ToolCallInfo, WebResultData } from "@/lib/types";
 import { loadSessions, saveSessions } from "@/lib/sessions-store";
 import logo from "@/public/thinkedinBACK.png";
 import BackgroundFX from "@/components/BackgroundFX";
@@ -15,9 +15,9 @@ import ChatInput from "./ChatInput";
 import WarmPathPanel from "./WarmPathPanel";
 
 const EXAMPLE_PROMPTS = [
-  "Find me someone who owns a software company in England",
-  "Who can refer me for a tech internship?",
-  "Any recruiters at fintech companies?",
+  "Who in my network could warm intro me to a Series A VC — and how close are they?",
+  "Find me a technical co-founder with AI or ML experience I've actually spoken to",
+  "Which of my connections at enterprise companies could be early customers for a B2B startup?",
 ];
 
 const BOOTSTRAP_SESSION: ChatSession = {
@@ -356,7 +356,9 @@ async function streamReply(
         | { type: "tool_call"; name: string; input: Record<string, unknown> }
         | { type: "tool_result"; name: string; resultCount: number | null }
         | { type: "matches"; matches: ProfileCardData[] }
-        | { type: "post"; post: PostData };
+        | { type: "post"; post: PostData }
+        | { type: "web_results"; results: WebResultData[] }
+        | { type: "linkedin_posts"; posts: LinkedInPostData[] };
 
       if (event.type === "turn_start") {
         if (turnCount === 0) {
@@ -409,6 +411,10 @@ async function streamReply(
         updateCurrent((m) => ({ ...m, matches: event.matches }));
       } else if (event.type === "post") {
         updateCurrent((m) => ({ ...m, post: event.post }));
+      } else if (event.type === "web_results") {
+        updateCurrent((m) => ({ ...m, webResults: [...(m.webResults ?? []), ...event.results] }));
+      } else if (event.type === "linkedin_posts") {
+        updateCurrent((m) => ({ ...m, linkedInPosts: [...(m.linkedInPosts ?? []), ...event.posts] }));
       }
     }
   }

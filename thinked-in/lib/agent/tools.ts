@@ -136,6 +136,31 @@ export function toolsForMode(mode: MessagesMode): Anthropic.Tool[] {
         required: ["linkedin_urls"],
       },
     },
+    {
+      name: "present_web_post",
+      description:
+        "Surface a LinkedIn post, profile update, or article found via web_search as a styled card in the UI. " +
+        "Call this WHENEVER web_search returns a LinkedIn URL that belongs to a person (post, activity, profile). " +
+        "You do NOT need full post content — call it with whatever the search result gave you: the title as content, " +
+        "the URL as source_url, and the person's name. Partial data is fine; the card still renders. " +
+        "Especially useful for: recent promotions, job changes, articles, company updates. " +
+        "Call once per relevant result — do not skip just because the data is incomplete.",
+      input_schema: {
+        type: "object",
+        properties: {
+          author_name: { type: "string", description: "Full name of the post author." },
+          author_title: { type: "string", description: "Author's job title / headline." },
+          author_avatar_url: { type: "string", description: "URL to author's profile photo if available." },
+          content: { type: "string", description: "The post text or article excerpt (first 400 chars is enough)." },
+          source_url: { type: "string", description: "URL to the original post or article." },
+          image_url: { type: "string", description: "URL of the post's image if present." },
+          time_ago: { type: "string", description: "How long ago it was posted, e.g. '3d', '1w', '2mo'." },
+          likes_count: { type: "integer", description: "Number of reactions/likes." },
+          comments_count: { type: "integer", description: "Number of comments." },
+        },
+        required: ["author_name", "content", "source_url"],
+      },
+    },
   ];
 
   if (mode === "full") {
@@ -287,6 +312,21 @@ export async function runTool(
         await mubitRecordSuggestions(userId, names);
       }
       return { presented: rows.length };
+    }
+    case "present_web_post": {
+      const post: LinkedInPostData = {
+        authorName: String(input.author_name ?? ""),
+        authorTitle: input.author_title ? String(input.author_title) : undefined,
+        authorAvatarUrl: input.author_avatar_url ? String(input.author_avatar_url) : undefined,
+        content: String(input.content ?? ""),
+        sourceUrl: input.source_url ? String(input.source_url) : undefined,
+        imageUrl: input.image_url ? String(input.image_url) : undefined,
+        timeAgo: input.time_ago ? String(input.time_ago) : undefined,
+        likesCount: typeof input.likes_count === "number" ? input.likes_count : undefined,
+        commentsCount: typeof input.comments_count === "number" ? input.comments_count : undefined,
+      };
+      ctx.collectLinkedInPosts?.([post]);
+      return { presented: true };
     }
     case "search_messages": {
       const hits = await searchMessages(supa, userId, String(input.query ?? ""), typeof input.limit === "number" ? input.limit : 20);

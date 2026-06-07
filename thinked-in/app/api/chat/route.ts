@@ -112,6 +112,8 @@ export async function POST(request: NextRequest) {
           onTurnEnd: (tools) => send({ type: "turn_end", tools }),
           onText: (text) => send({ type: "delta", text }),
           onMatches: (matches) => send({ type: "matches", matches }),
+          onWebResults: (results) => send({ type: "web_results", results }),
+          onLinkedInPosts: (posts) => send({ type: "linkedin_posts", posts }),
           onToolCall: (name, input) => send({ type: "tool_call", name, input }),
           onToolResult: (name, resultCount) => send({ type: "tool_result", name, resultCount }),
         });
