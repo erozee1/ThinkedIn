@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useUser } from "@clerk/nextjs";
@@ -19,6 +19,20 @@ const EXAMPLE_PROMPTS = [
   "Any recruiters at fintech companies?",
 ];
 
+const BOOTSTRAP_SESSION: ChatSession = {
+  id: "bootstrap-session",
+  title: "New chat",
+  updatedAt: "",
+  messages: [],
+};
+
+const BOOTSTRAP_STATE = {
+  sessions: [BOOTSTRAP_SESSION],
+  activeId: BOOTSTRAP_SESSION.id,
+};
+
+const subscribeHydration = () => () => {};
+
 const uid = () =>
   globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2);
 
@@ -33,36 +47,42 @@ function newSession(): ChatSession {
 
 export default function ChatApp({ onReimport }: { onReimport: () => void }) {
   const { user } = useUser();
-
-  // Load persisted sessions once (ChatApp only mounts client-side, after
-  // DashboardApp resolves), falling back to a fresh chat on first run.
-  const [state, setState] = useState<{ sessions: ChatSession[]; activeId: string }>(
-    () => {
-      const loaded = loadSessions();
-      const sessions = loaded.length ? loaded : [newSession()];
-      return { sessions, activeId: sessions[0].id };
-    },
-  );
+  const isHydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
+  const [clientState, setClientState] = useState<{ sessions: ChatSession[]; activeId: string } | null>(null);
+  const state = useMemo(() => {
+    if (clientState) return clientState;
+    if (!isHydrated) return BOOTSTRAP_STATE;
+    const loaded = loadSessions();
+    const sessions = loaded.length ? loaded : [newSession()];
+    return { sessions, activeId: sessions[0].id };
+  }, [clientState, isHydrated]);
   const { sessions, activeId } = state;
   const setSessions = (
     updater: ChatSession[] | ((prev: ChatSession[]) => ChatSession[]),
   ) =>
-    setState((st) => ({
-      ...st,
-      sessions:
-        typeof updater === "function"
-          ? (updater as (prev: ChatSession[]) => ChatSession[])(st.sessions)
-          : updater,
-    }));
-  const setActiveId = (id: string) => setState((st) => ({ ...st, activeId: id }));
+    setClientState((st) => {
+      const base = st ?? state;
+      return {
+        ...base,
+        sessions:
+          typeof updater === "function"
+            ? (updater as (prev: ChatSession[]) => ChatSession[])(base.sessions)
+            : updater,
+      };
+    });
+  const setActiveId = (id: string) =>
+    setClientState((st) => {
+      const base = st ?? state;
+      return { ...base, activeId: id };
+    });
 
   const [streaming, setStreaming] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
 
   // Persist history to the store (skip while streaming to avoid thrashing).
   useEffect(() => {
-    if (!streaming) saveSessions(sessions);
-  }, [sessions, streaming]);
+    if (isHydrated && clientState && !streaming) saveSessions(sessions);
+  }, [sessions, streaming, isHydrated, clientState]);
 
   const active = sessions.find((s) => s.id === activeId) ?? sessions[0];
 
@@ -86,12 +106,13 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
   };
 
   const handleDeleteChat = (id: string) => {
-    setState((st) => {
-      const remaining = st.sessions.filter((session) => session.id !== id);
+    setClientState((st) => {
+      const base = st ?? state;
+      const remaining = base.sessions.filter((session) => session.id !== id);
       const sessions = remaining.length ? remaining : [newSession()];
-      const activeStillExists = sessions.some((session) => session.id === st.activeId);
+      const activeStillExists = sessions.some((session) => session.id === base.activeId);
       const activeId = activeStillExists
-        ? st.activeId
+        ? base.activeId
         : sessions[0]?.id ?? newSession().id;
 
       return { sessions, activeId };

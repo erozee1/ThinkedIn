@@ -14,7 +14,7 @@ export function createServerSupabaseClient() {
   return createClient(SUPABASE_URL(), SUPABASE_ANON_KEY(), {
     accessToken: async () => {
       const { getToken } = await auth();
-      return (await getToken()) ?? null;
+      return (await getToken({ template: "supabase" })) ?? null;
     },
   });
 }

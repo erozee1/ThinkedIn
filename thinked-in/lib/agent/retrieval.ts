@@ -65,17 +65,16 @@ export async function searchByMeaning(
 const CONN_COLS =
   "id, first_name, last_name, position, company, location, country, seniority, industry, summary, linkedin_url, relationship_strength, last_contacted, message_count";
 
-type FilterBuilder = {
-  in(column: string, values: string[]): FilterBuilder;
-  eq(column: string, value: string): FilterBuilder;
-  ilike(column: string, value: string): FilterBuilder;
-  gte(column: string, value: string | number): FilterBuilder;
-};
+interface FilterBuilder {
+  in(column: string, values: string[]): this;
+  eq(column: string, value: string): this;
+  ilike(column: string, value: string): this;
+  gte(column: string, value: string | number): this;
+}
 
-function applyFilters<T>(q: T, f: Filters, userIds: string[]): T {
+function applyFilters<T extends FilterBuilder>(q: T, f: Filters, userIds: string[]): T {
   // q is a PostgREST filter builder; chained calls return the same builder.
-  let b = q as T & FilterBuilder;
-  b = b.in("user_id", userIds) as T & FilterBuilder;
+  let b = q.in("user_id", userIds);
   if (usesProfileFilter(f)) b = b.eq("enrichment_status", "enriched");
   if (f.country) b = b.eq("country_norm", f.country.toLowerCase());
   if (f.company) b = b.ilike("company_norm", `%${f.company.toLowerCase()}%`);
@@ -85,7 +84,7 @@ function applyFilters<T>(q: T, f: Filters, userIds: string[]): T {
   if (f.relationship_strength) b = b.eq("relationship_strength", f.relationship_strength);
   if (f.last_contacted_after) b = b.gte("last_contacted", f.last_contacted_after);
   if (typeof f.min_message_count === "number") b = b.gte("message_count", f.min_message_count);
-  return b as T;
+  return b;
 }
 
 export async function queryByFilter(
