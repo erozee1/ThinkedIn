@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -10,7 +10,7 @@ export async function GET() {
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const supa = createServerSupabaseClient();
+    const supa = createAdminClient();
     const { count, error } = await supa
       .from("connections")
       .select("id", { count: "exact", head: true })
