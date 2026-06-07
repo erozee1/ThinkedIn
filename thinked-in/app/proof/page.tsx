@@ -1,6 +1,4 @@
-import { Suspense } from "react";
 import SiteMast from "@/components/SiteMast";
-import ClerkStats from "@/components/proof/ClerkStats";
 import DocPreview, { type DocItem } from "@/components/proof/DocPreview";
 
 const phases = [
@@ -440,20 +438,6 @@ export default function ResearchPage() {
                 <p className="mt-0.5 text-xs leading-snug text-emerald-100">Estimated monthly revenue</p>
               </div>
             </div>
-
-            {/* Live traction */}
-            <Suspense fallback={
-              <div className="mt-16 ml-[88px]">
-                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">Live Traction</p>
-                <div className="flex gap-3">
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className="h-16 w-32 rounded-xl bg-zinc-100 animate-pulse" />
-                  ))}
-                </div>
-              </div>
-            }>
-              <ClerkStats />
-            </Suspense>
           </div>
         </div>
       </div>
