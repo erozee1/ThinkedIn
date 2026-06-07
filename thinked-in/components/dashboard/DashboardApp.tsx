@@ -26,7 +26,6 @@ export default function DashboardApp({ initialStage = "init" as Stage }: { initi
           localStorage.setItem(IMPORTED_KEY, "true");
           setStage("chat");
         } else {
-          localStorage.removeItem(IMPORTED_KEY);
           setStage((s) => (s === "init" ? "onboarding" : s));
         }
       } catch {

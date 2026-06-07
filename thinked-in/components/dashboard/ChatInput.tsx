@@ -20,7 +20,7 @@ export default function ChatInput({
   };
 
   return (
-    <div className="px-4 pb-6">
+    <div className="px-4 pb-8 md:pb-10">
       <div className="mx-auto w-full max-w-3xl">
         <div className="flex items-end gap-2 rounded-3xl glass-strong p-2 pl-4">
           <textarea

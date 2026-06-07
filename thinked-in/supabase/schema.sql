@@ -45,7 +45,10 @@ create table if not exists connections (
   relationship_strength text,             -- none / dormant / warm / active / close
 
   embedding vector(1536),                 -- text-embedding-3-small
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+
+  -- Org membership at upload time (null for personal / non-org uploads)
+  org_id text
 );
 
 alter table connections enable row level security;
@@ -61,6 +64,7 @@ create index if not exists connections_user_rel_idx on connections (user_id, rel
 create index if not exists connections_user_lastcontact_idx on connections (user_id, last_contacted desc);
 create index if not exists connections_user_country_idx on connections (user_id, country_norm);
 create index if not exists connections_user_company_idx on connections (user_id, company_norm);
+create index if not exists connections_org_idx on connections (org_id);
 
 -- ── Per-user consent / settings ───────────────────────────────────────────────
 create table if not exists user_settings (

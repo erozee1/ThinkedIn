@@ -1,14 +1,12 @@
 @import "tailwindcss";
 
 /*
- * thinkedin — LinkedIn-identical LIGHT theme, with tasteful blue gradients.
- * Palette mirrors LinkedIn: warm grey page, white cards, near-black text,
- * #0a66c2 brand blue.
+ * thinkedin — light slate surfaces with blue reserved for accents.
  */
 
 :root {
-  /* LinkedIn surfaces */
-  --bg: #f4f2ee; /* LinkedIn warm grey page background */
+  /* Base surfaces */
+  --bg: #f6f8fb; /* very light slate page background */
   --surface: #ffffff; /* cards */
   --foreground: rgba(0, 0, 0, 0.9);
   --muted: rgba(0, 0, 0, 0.6);
@@ -60,20 +58,25 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.font-helvetica-ui {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.font-serif-ui {
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
+
 /* ---------------------------------------------------------------------------
- * Aurora — subtle blue gradient wash over the warm-grey page (light, soft).
+ * Aurora — subtle light-slate wash over the page.
  * ------------------------------------------------------------------------- */
 .aurora {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  /* Frutiger Aero cool-blue sky: vibrant blue up top, glossy near-white below,
-     with a soft sun bloom and a bright ground glow. Static so the background is
-     pixel-identical across pages, keeping transitions seamless. */
   background:
-    radial-gradient(42% 34% at 86% 6%, rgba(255, 255, 255, 0.65), transparent 62%),
-    radial-gradient(80% 55% at 50% 116%, rgba(255, 255, 255, 0.6), transparent 60%),
-    linear-gradient(180deg, #2a8fe6 0%, #5fb4f2 34%, #a9dcf8 70%, #e8f6ff 100%);
+    radial-gradient(42% 34% at 86% 6%, rgba(255, 255, 255, 0.72), transparent 62%),
+    radial-gradient(80% 55% at 50% 116%, rgba(255, 255, 255, 0.52), transparent 60%),
+    linear-gradient(180deg, #f8fafc 0%, #f3f6fa 38%, #edf2f7 72%, #e7edf4 100%);
 }
 
 /* ---------------------------------------------------------------------------
@@ -112,7 +115,7 @@ body {
 .cloud {
   position: absolute;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.45);
   filter: blur(60px);
   will-change: transform;
   pointer-events: none;

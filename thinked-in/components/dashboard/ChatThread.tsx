@@ -2,13 +2,19 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, Hash, Users, BarChart2, Loader2, Target } from "lucide-react";
-import type { ChatMessage } from "@/lib/types";
+import { Search, Filter, Globe, Hash, Users, BarChart2, Loader2, MessageSquare, ScanSearch, Target } from "lucide-react";
+import type { ChatMessage, ProfileCardData, ToolCallInfo } from "@/lib/types";
 import ProfileCard from "@/components/ProfileCard";
 import PostCard from "@/components/dashboard/PostCard";
 import ThinkingDots from "@/components/ThinkingDots";
 
-export default function ChatThread({ messages }: { messages: ChatMessage[] }) {
+export default function ChatThread({
+  messages,
+  onCardClick,
+}: {
+  messages: ChatMessage[];
+  onCardClick?: (person: ProfileCardData) => void;
+}) {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -17,9 +23,9 @@ export default function ChatThread({ messages }: { messages: ChatMessage[] }) {
 
   return (
     <div className="scroll-slim flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-8">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-2.5 px-6 py-5">
         {messages.map((m) => (
-          <MessageBubble key={m.id} message={m} />
+          <MessageBubble key={m.id} message={m} onCardClick={onCardClick} />
         ))}
         <div ref={endRef} />
       </div>
@@ -27,7 +33,18 @@ export default function ChatThread({ messages }: { messages: ChatMessage[] }) {
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({
+  message,
+  onCardClick,
+}: {
+  message: ChatMessage;
+  onCardClick?: (person: ProfileCardData) => void;
+}) {
+  const hasText = message.content.trim().length > 0;
+  const hasMatches = Boolean(message.matches?.length);
+  const hasToolCalls = Boolean(message.toolCalls?.length || message.toolNames?.length);
+  const hasPost = Boolean(message.post);
+
   if (message.role === "user") {
     return (
       <motion.div
@@ -43,24 +60,26 @@ function MessageBubble({ message }: { message: ChatMessage }) {
     );
   }
 
-  // Pending with no content yet and no kind assigned — show spinner.
-  if (message.pending && !message.content && !message.kind) {
+  if (!message.pending && !hasText && !hasMatches && !hasToolCalls && !hasPost) {
+    return null;
+  }
+
+  if (message.pending && !hasText && !message.kind) {
     return <ThinkingStep message={message} />;
   }
 
-  // Thinking step: muted caption + compact tool pill. Visually subordinate to the final answer.
   if (message.kind === "thinking") {
     return (
-      <div className="flex flex-col gap-1.5">
-        {message.content ? (
-          <motion.p
-            className="max-w-[88%] text-[13px] leading-relaxed text-foreground/50"
+      <div className="flex flex-col gap-1">
+        {hasText ? (
+          <motion.div
+            className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass-strong px-4 py-3 text-[13px] text-foreground/70"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
           >
-            {message.content}
-          </motion.p>
+            <RichText text={message.content} />
+          </motion.div>
         ) : null}
         <ThinkingStep message={message} />
       </div>
@@ -75,16 +94,16 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       transition={{ duration: 0.28, ease: "easeOut" }}
     >
       <div className="min-w-0 flex-1">
-        {message.pending && !message.content ? (
+        {message.pending && !hasText ? (
           <ThinkingDots label="thinkedin is thinking…" />
-        ) : (
-          <div className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass px-4 py-3 text-[15px] leading-relaxed text-foreground">
+        ) : hasText ? (
+          <div className="inline-block max-w-[88%] rounded-3xl rounded-tl-md glass-strong px-4 py-3 text-[13px] text-foreground">
             <RichText text={message.content} />
           </div>
-        )}
+        ) : null}
 
-        {message.matches && message.matches.length > 0 && (
-          <div className="mt-3 flex flex-col gap-2 sm:max-w-md">
+        {message.matches?.length ? (
+          <div className="mt-4 grid max-w-xs grid-cols-2 gap-2.5">
             {message.matches.map((person, i) => (
               <motion.div
                 key={person.id}
@@ -92,45 +111,114 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
               >
-                <ProfileCard person={person} />
+                {onCardClick ? (
+                  <button
+                    type="button"
+                    className="block w-full text-left"
+                    onClick={() => onCardClick(person)}
+                  >
+                    <ProfileCard person={person} asLink={false} />
+                  </button>
+                ) : (
+                  <ProfileCard person={person} />
+                )}
               </motion.div>
             ))}
           </div>
-        )}
+        ) : null}
 
-        {message.post && (
+        {message.post ? (
           <motion.div
-            className="mt-3 sm:max-w-md"
+            className="mt-4 sm:max-w-md"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <PostCard post={message.post} />
           </motion.div>
-        )}
+        ) : null}
       </div>
     </motion.div>
   );
 }
 
-const TOOL_META: Record<string, { label: string; Icon: React.ElementType }> = {
-  search_by_meaning:   { label: "Semantic search",      Icon: Search },
-  query_by_filter:     { label: "Filtered network",     Icon: Filter },
-  keyword_search:      { label: "Keyword search",       Icon: Hash },
-  present_connections: { label: "Selected connections", Icon: Users },
-  get_network_stats:   { label: "Analysed network",     Icon: BarChart2 },
-  save_goal:           { label: "Goal saved",            Icon: Target },
+const TOOL_ICON: Record<string, React.ElementType> = {
+  search_by_meaning: Search,
+  query_by_filter: Filter,
+  keyword_search: Hash,
+  present_connections: Users,
+  get_network_stats: BarChart2,
+  save_goal: Target,
+  web_search: Globe,
+  search_messages: MessageSquare,
+  research_person: ScanSearch,
 };
 
-function ThinkingStep({ message }: { message: ChatMessage }) {
-  const tools = message.toolNames ?? [];
-  const isPending = message.pending;
+function trunc(s: string, n: number) {
+  return s.length > n ? s.slice(0, n - 1) + "…" : s;
+}
 
-  // Deduplicate tools and count repetitions (e.g. two search_by_meaning calls → "Semantic search ×2")
-  const toolCounts = tools.reduce<Record<string, number>>((acc, name) => {
-    acc[name] = (acc[name] ?? 0) + 1;
-    return acc;
-  }, {});
-  const uniqueTools = Object.entries(toolCounts);
+function formatToolCall(call: ToolCallInfo): { primary: string; count?: string } {
+  const { name, input, resultCount } = call;
+
+  switch (name) {
+    case "search_by_meaning":
+    case "search_messages":
+    case "web_search": {
+      const q = String(input.query ?? "").trim();
+      return {
+        primary: q ? `"${trunc(q, 35)}"` : name,
+        count: resultCount != null ? `${resultCount} found` : undefined,
+      };
+    }
+    case "keyword_search": {
+      const terms = (input.terms as string[] ?? []);
+      const label = terms.length
+        ? trunc(terms.slice(0, 3).join(", ") + (terms.length > 3 ? ` +${terms.length - 3}` : ""), 40)
+        : "keywords";
+      return { primary: label, count: resultCount != null ? `${resultCount} found` : undefined };
+    }
+    case "query_by_filter": {
+      const f = (input.filters as Record<string, string | undefined> ?? {});
+      const parts = [f.company, f.country, f.seniority, f.industry]
+        .filter((v): v is string => Boolean(v))
+        .slice(0, 3);
+      return {
+        primary: parts.length ? parts.join(" · ") : "network",
+        count: resultCount != null ? String(resultCount) : undefined,
+      };
+    }
+    case "get_network_stats": {
+      const dim = String(input.group_by ?? "").replace(/_/g, " ");
+      return { primary: dim ? `by ${dim}` : "stats" };
+    }
+    case "present_connections": {
+      const n = Array.isArray(input.linkedin_urls) ? input.linkedin_urls.length : (resultCount ?? 0);
+      return { primary: `${n} selected` };
+    }
+    case "save_goal": {
+      const goal = String(input.goal ?? "").trim();
+      return { primary: goal ? `"${trunc(goal, 35)}"` : "goal" };
+    }
+    case "research_person": {
+      const personName = String(input.name ?? "").trim();
+      const company = String(input.company ?? "").trim();
+      const label = personName ? (company ? `${personName} · ${company}` : personName) : "person";
+      return { primary: trunc(label, 40) };
+    }
+    default:
+      return { primary: name.replace(/_/g, " ") };
+  }
+}
+
+function ThinkingStep({ message }: { message: ChatMessage }) {
+  const isPending = message.pending;
+  const toolCalls: ToolCallInfo[] =
+    message.toolCalls ??
+    (message.toolNames ?? []).map((name) => ({
+      name,
+      input: {},
+      resultCount: null,
+    }));
 
   return (
     <motion.div
@@ -139,23 +227,28 @@ function ThinkingStep({ message }: { message: ChatMessage }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
     >
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-200/60 bg-white/60 px-3.5 py-2 text-xs text-zinc-500 backdrop-blur-sm">
-        {isPending ? (
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl border border-zinc-200/60 bg-white/60 px-3.5 py-2 text-xs text-zinc-500 backdrop-blur-sm">
+        {toolCalls.length > 0 ? (
+          toolCalls.map((call, i) => {
+            const Icon = TOOL_ICON[call.name] ?? Search;
+            const { primary, count } = formatToolCall(call);
+            return (
+              <span key={`${call.name}-${i}`} className="flex items-center gap-1">
+                {call.loading ? (
+                  <Loader2 className="h-3 w-3 shrink-0 animate-spin text-[#0a66c2]" />
+                ) : (
+                  <Icon className="h-3 w-3 shrink-0 text-zinc-400" />
+                )}
+                <span className={call.loading ? "text-[#0a66c2]" : undefined}>{primary}</span>
+                {!call.loading && count ? <span className="text-zinc-400">· {count}</span> : null}
+              </span>
+            );
+          })
+        ) : isPending ? (
           <>
             <Loader2 className="h-3.5 w-3.5 animate-spin text-[#0a66c2]" />
             <span className="text-[#0a66c2]">Searching your network…</span>
           </>
-        ) : uniqueTools.length > 0 ? (
-          uniqueTools.map(([name, count]) => {
-            const meta = TOOL_META[name] ?? { label: name, Icon: Search };
-            return (
-              <span key={name} className="flex items-center gap-1">
-                <meta.Icon className="h-3 w-3" />
-                {meta.label}
-                {count > 1 && <span className="text-zinc-400">×{count}</span>}
-              </span>
-            );
-          })
         ) : (
           <span>Searched your network</span>
         )}
@@ -164,12 +257,11 @@ function ThinkingStep({ message }: { message: ChatMessage }) {
   );
 }
 
-// Minimal renderer: paragraph breaks + **bold**. Enough for the stubbed replies.
 function RichText({ text }: { text: string }) {
   return (
-    <>
+    <div className="space-y-1 text-[13px] leading-[1.4]">
       {text.split("\n").map((line, i) => (
-        <p key={i} className={line.trim() === "" ? "h-2" : ""}>
+        <p key={i} className={line.trim() === "" ? "h-1.5" : "m-0"}>
           {line.split(/(\*\*[^*]+\*\*)/g).map((part, j) =>
             part.startsWith("**") && part.endsWith("**") ? (
               <strong key={j} className="font-semibold text-foreground">
@@ -181,6 +273,6 @@ function RichText({ text }: { text: string }) {
           )}
         </p>
       ))}
-    </>
+    </div>
   );
 }

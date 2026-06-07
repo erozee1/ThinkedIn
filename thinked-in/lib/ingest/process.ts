@@ -58,6 +58,7 @@ export async function processConnections(
   userId: string,
   connectionsCsv: string,
   jobId: string,
+  orgId: string | null = null,
 ): Promise<number> {
   const connections = dedupeConnections(parseConnections(connectionsCsv));
   console.log(`[INGEST] processConnections start — ${connections.length} rows user=${userId} job=${jobId}`);
@@ -105,6 +106,7 @@ export async function processConnections(
       if (!key) continue;
       const row = {
         user_id: userId,
+        org_id: orgId,
         first_name: c.firstName,
         last_name: c.lastName,
         email: c.email,

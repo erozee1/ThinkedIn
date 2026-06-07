@@ -1,12 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { embedOne, toVectorLiteral } from "../embeddings";
 
-// Every function takes the Clerk-verified userId and scopes all queries to it
-// explicitly (service-role client). Filters are fuzzy by design (normalized
-// columns + ilike) so they don't silently return zero rows.
+// Every function takes userIds (all Clerk user ids to query) and scopes all
+// queries to that set explicitly (service-role client). For solo users this is
+// [userId]; for org members it includes all org member ids. Filters are fuzzy
+// by design (normalized columns + ilike) so they don't silently return zero rows.
 
 export interface ConnectionRow {
   id: string;
+  user_id?: string | null;
   first_name: string | null;
   last_name: string | null;
   position: string | null;
@@ -40,14 +42,14 @@ function usesProfileFilter(f: Filters): boolean {
 
 export async function searchByMeaning(
   supa: SupabaseClient,
-  userId: string,
+  userIds: string[],
   query: string,
   filters: Filters = {},
   limit = 20,
 ): Promise<ConnectionRow[]> {
   const vector = await embedOne(query);
   const { data, error } = await supa.rpc("match_connections", {
-    p_user_id: userId,
+    p_user_ids: userIds,
     query_embedding: toVectorLiteral(vector),
     match_count: limit,
     filter_country: filters.country ?? null,
@@ -64,9 +66,16 @@ export async function searchByMeaning(
 const CONN_COLS =
   "id, first_name, last_name, position, company, location, country, seniority, industry, summary, linkedin_url, relationship_strength, last_contacted, message_count";
 
-function applyFilters<T>(q: T, f: Filters, userId: string): T {
+interface FilterBuilder {
+  in(column: string, values: string[]): this;
+  eq(column: string, value: string): this;
+  ilike(column: string, value: string): this;
+  gte(column: string, value: string | number): this;
+}
+
+function applyFilters<T extends FilterBuilder>(q: T, f: Filters, userIds: string[]): T {
   // q is a PostgREST filter builder; chained calls return the same builder.
-  let b = (q as any).eq("user_id", userId);
+  let b = q.in("user_id", userIds);
   if (usesProfileFilter(f)) b = b.eq("enrichment_status", "enriched");
   if (f.country) b = b.eq("country_norm", f.country.toLowerCase());
   if (f.company) b = b.ilike("company_norm", `%${f.company.toLowerCase()}%`);
@@ -76,31 +85,31 @@ function applyFilters<T>(q: T, f: Filters, userId: string): T {
   if (f.relationship_strength) b = b.eq("relationship_strength", f.relationship_strength);
   if (f.last_contacted_after) b = b.gte("last_contacted", f.last_contacted_after);
   if (typeof f.min_message_count === "number") b = b.gte("message_count", f.min_message_count);
-  return b as T;
+  return b;
 }
 
 export async function queryByFilter(
   supa: SupabaseClient,
-  userId: string,
+  userIds: string[],
   filters: Filters,
   mode: "count" | "list",
   limit = 40,
 ): Promise<{ count: number } | ConnectionRow[]> {
   if (mode === "count") {
     const base = supa.from("connections").select("id", { count: "exact", head: true });
-    const { count, error } = await applyFilters(base, filters, userId);
+    const { count, error } = await applyFilters(base, filters, userIds);
     if (error) throw new Error(`queryByFilter(count): ${error.message}`);
     return { count: count ?? 0 };
   }
   const base = supa.from("connections").select(CONN_COLS).limit(limit);
-  const { data, error } = await applyFilters(base, filters, userId);
+  const { data, error } = await applyFilters(base, filters, userIds);
   if (error) throw new Error(`queryByFilter(list): ${error.message}`);
   return (data ?? []) as ConnectionRow[];
 }
 
 export async function getNetworkStats(
   supa: SupabaseClient,
-  userId: string,
+  userIds: string[],
   groupBy: "industry" | "country" | "seniority" | "relationship_strength" = "industry",
 ): Promise<{ coverage: Record<string, number>; groups: { bucket: string; n: number }[] }> {
   // Coverage line (always).
@@ -110,7 +119,7 @@ export async function getNetworkStats(
     const { count } = await supa
       .from("connections")
       .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
+      .in("user_id", userIds)
       .eq("enrichment_status", s);
     coverage[s] = count ?? 0;
   }
@@ -118,7 +127,7 @@ export async function getNetworkStats(
 
   // Grouping. relationship_strength counts ALL rows; profile fields count enriched only.
   const col = groupBy === "country" ? "country_norm" : groupBy;
-  let q = supa.from("connections").select(col).eq("user_id", userId);
+  let q = supa.from("connections").select(col).in("user_id", userIds);
   if (groupBy !== "relationship_strength") q = q.eq("enrichment_status", "enriched");
   const { data, error } = await q;
   if (error) throw new Error(`getNetworkStats: ${error.message}`);
@@ -136,7 +145,7 @@ export async function getNetworkStats(
 
 export async function keywordSearch(
   supa: SupabaseClient,
-  userId: string,
+  userIds: string[],
   terms: string[],
   fields: ("position" | "company" | "summary" | "skills")[] = ["position", "company", "summary", "skills"],
   limit = 40,
@@ -147,7 +156,7 @@ export async function keywordSearch(
     const safe = t.replace(/[%,()]/g, " ").trim();
     if (!safe) continue;
     for (const f of fields) {
-      if (f === "skills") ors.push(`skills.cs.{${safe}}`); // array contains
+      if (f === "skills") ors.push(`skills.cs.{${safe}}`);
       else ors.push(`${f}.ilike.%${safe}%`);
     }
   }
@@ -155,7 +164,7 @@ export async function keywordSearch(
   const { data, error } = await supa
     .from("connections")
     .select(CONN_COLS)
-    .eq("user_id", userId)
+    .in("user_id", userIds)
     .eq("enrichment_status", "enriched")
     .or(ors.join(","))
     .limit(limit);

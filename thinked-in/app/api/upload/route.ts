@@ -51,7 +51,7 @@ function extractCsvs(name: string, bytes: Uint8Array): { connections: string | n
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   console.log(`[UPLOAD] start — user=${userId}`);
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
   after(async () => {
     console.log(`[UPLOAD:BG] background task started — job=${job.id}`);
     try {
-      await processConnections(supa, userId, connCsv, job.id);
+      await processConnections(supa, userId, connCsv, job.id, orgId ?? null);
       console.log(`[UPLOAD:BG] processConnections complete`);
       if (msgCsv && mode !== "none") {
         await supa.from("upload_jobs").update({ status: "processing_messages", updated_at: new Date().toISOString() }).eq("id", job.id);

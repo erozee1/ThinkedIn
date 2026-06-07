@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runAgent, type AgentTurnInput } from "@/lib/agent/run";
 import type { MessagesMode } from "@/lib/agent/tools";
@@ -10,18 +10,38 @@ export const maxDuration = 60;
 // Wire protocol (newline-delimited JSON):
 //   {"type":"turn_start"}                       each agent turn begins → client creates a new bubble
 //   {"type":"delta","text":"..."}               streamed text token for the current turn
-//   {"type":"turn_end","tools":["tool_name"]}   current turn done; tools=[] means final answer
+//   {"type":"tool_call","name":"...","input":{}} tool execution started for the current turn
+//   {"type":"tool_result","name":"...","resultCount":3} tool execution finished
+//   {"type":"turn_end","tools":[...]}            current turn done; tools=[] means final answer
 //   {"type":"matches","matches":[...]}          profile cards to attach to the current message
 //
 // Auth: userId comes from Clerk's server-verified session. Every DB query is
 // scoped to it explicitly (service-role client), so data is isolated per user.
 export async function POST(request: NextRequest) {
-  const { userId, has } = await auth();
+  const { userId, has, orgId } = await auth();
   if (!userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
   // Premium plan unlocks live Apify profile verification in the agent.
   const premium = typeof has === "function" ? has({ plan: "premium" }) : false;
+
+  // Expand userIds to all org members when the user is in an org.
+  let userIds: string[] = [userId];
+  if (orgId) {
+    try {
+      const clerk = await clerkClient();
+      const memberships = await clerk.organizations.getOrganizationMembershipList({
+        organizationId: orgId,
+        limit: 50,
+      });
+      const memberIds = memberships.data
+        .map((m) => m.publicUserData?.userId)
+        .filter((id): id is string => Boolean(id));
+      if (memberIds.length > 0) userIds = memberIds;
+    } catch {
+      // Fall back to solo if org fetch fails — never block the chat request.
+    }
+  }
 
   let message = "";
   let history: AgentTurnInput[] = [];
@@ -68,6 +88,8 @@ export async function POST(request: NextRequest) {
         await runAgent({
           supa,
           userId,
+          userIds,
+          orgSize: userIds.length,
           mode,
           premium,
           goalContext,
@@ -77,6 +99,8 @@ export async function POST(request: NextRequest) {
           onTurnEnd: (tools) => send({ type: "turn_end", tools }),
           onText: (text) => send({ type: "delta", text }),
           onMatches: (matches) => send({ type: "matches", matches }),
+          onToolCall: (name, input) => send({ type: "tool_call", name, input }),
+          onToolResult: (name, resultCount) => send({ type: "tool_result", name, resultCount }),
         });
       } catch (e) {
         send({

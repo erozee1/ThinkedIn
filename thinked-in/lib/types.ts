@@ -51,6 +51,8 @@ export type ProfileCardData = Pick<
 > & {
   /** Present only when a premium verify_profiles call re-scraped this person. */
   verified?: ProfileVerification;
+  /** True when the connection belongs to an org team member rather than the requesting user. */
+  fromTeam?: boolean;
 };
 
 export type ChatRole = "user" | "assistant";
@@ -60,6 +62,15 @@ export interface PostData {
   author?: { name: string; role: string; avatarUrl: string };
   title: string;
   body: string;
+}
+
+/** Structured info about a single tool call, forwarded from the agent to the client. */
+export interface ToolCallInfo {
+  name: string;
+  input: Record<string, unknown>;
+  resultCount: number | null;
+  /** True while the tool is still executing; cleared when tool_result arrives. */
+  loading?: boolean;
 }
 
 export interface ChatMessage {
@@ -74,6 +85,8 @@ export interface ChatMessage {
   kind?: "thinking" | "answer";
   /** Tools called during this turn — populated for kind="thinking" messages. */
   toolNames?: string[];
+  /** Rich tool call details (supersedes toolNames when present). */
+  toolCalls?: ToolCallInfo[];
   /** Matched people the assistant surfaced inline with this reply. */
   matches?: ProfileCardData[];
   /** A drafted post/message the assistant surfaced. */

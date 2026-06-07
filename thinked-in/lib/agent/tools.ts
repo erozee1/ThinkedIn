@@ -12,6 +12,7 @@ import {
 import { toCard } from "./cards";
 import { mubitRemember, mubitRecordSuggestions } from "../mubit";
 import { verifyProfile } from "../apify";
+import { researchPerson } from "./research";
 import type { ProfileCardData, ProfileVerification } from "../types";
 
 export type MessagesMode = "full" | "metadata" | "none";
@@ -179,13 +180,39 @@ export function toolsForMode(mode: MessagesMode, premium = false): Anthropic.Too
       },
     });
   }
+
+  // Only expose research_person when a Tavily key is available.
+  if (process.env.TAVILY_API_KEY) {
+    tools.push({
+      name: "research_person",
+      description:
+        "Deep-dive research on a specific connection: pulls their recent news coverage, blog posts and articles, " +
+        "GitHub / open-source work, and talk or podcast appearances from the public web. " +
+        "Call this AFTER narrowing to a shortlist (1–3 people) when you need external evidence to " +
+        "choose who to recommend or to give the user a richer 'why this person' answer. " +
+        "DO NOT call it during initial broad searches — only for people you are seriously considering. " +
+        "Use the findings to cite real, specific things: a recent post, a project, a talk topic.",
+      input_schema: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "Full name of the person." },
+          company: { type: "string", description: "Their current company (improves search precision)." },
+          role: { type: "string", description: "Their title or area of work (optional)." },
+        },
+        required: ["name"],
+      },
+    });
+  }
+
   return tools;
 }
 
 export interface ToolContext {
   supa: SupabaseClient;
-  /** Clerk-verified user id; every query is scoped to it. */
+  /** Clerk-verified user id of the requester — used for writes only. */
   userId: string;
+  /** All queryable user ids: [userId] for solo, org member ids for org users. */
+  userIds: string[];
   /** Accumulates people surfaced by any tool, for the UI 'matches' cards. */
   collectCards: (cards: ProfileCardData[]) => void;
   /** True when the user is on the premium plan — unlocks verify_profiles. */
@@ -217,7 +244,7 @@ export async function runTool(
   input: Record<string, unknown>,
   ctx: ToolContext,
 ): Promise<unknown> {
-  const { supa, userId, collectCards } = ctx;
+  const { supa, userId, userIds, collectCards } = ctx;
 
   switch (name) {
     case "save_goal": {
@@ -230,7 +257,7 @@ export async function runTool(
     case "search_by_meaning": {
       const rows = await searchByMeaning(
         supa,
-        userId,
+        userIds,
         String(input.query ?? ""),
         (input.filters as Filters) ?? {},
         typeof input.limit === "number" ? input.limit : 30,
@@ -242,7 +269,7 @@ export async function runTool(
       const mode = input.mode === "count" ? "count" : "list";
       const res = await queryByFilter(
         supa,
-        userId,
+        userIds,
         (input.filters as Filters) ?? {},
         mode,
         typeof input.limit === "number" ? input.limit : 40,
@@ -255,12 +282,12 @@ export async function runTool(
     }
     case "get_network_stats": {
       const g = (input.group_by as "industry" | "country" | "seniority" | "relationship_strength") ?? "industry";
-      return getNetworkStats(supa, userId, g);
+      return getNetworkStats(supa, userIds, g);
     }
     case "keyword_search": {
       const rows = await keywordSearch(
         supa,
-        userId,
+        userIds,
         (input.terms as string[]) ?? [],
         (input.fields as ("position" | "company" | "summary" | "skills")[]) ?? undefined,
         typeof input.limit === "number" ? input.limit : 40,
@@ -272,13 +299,13 @@ export async function runTool(
       const urls = (input.linkedin_urls as string[]) ?? [];
       const { data } = await supa
         .from("connections")
-        .select("id, first_name, last_name, position, company, location, country, seniority, industry, summary, linkedin_url, relationship_strength, last_contacted")
-        .eq("user_id", userId)
+        .select("id, user_id, first_name, last_name, position, company, location, country, seniority, industry, summary, linkedin_url, relationship_strength, last_contacted")
+        .in("user_id", userIds)
         .in("linkedin_url", urls);
       const rows = (data ?? []) as ConnectionRow[];
       collectCards(
         rows.map((r) => {
-          const card = toCard(r);
+          const card: ProfileCardData = { ...toCard(r), fromTeam: r.user_id !== userId };
           const v = ctx.verifications.get(r.linkedin_url ?? "");
           return v ? { ...card, verified: v } : card;
         }),
@@ -366,6 +393,17 @@ export async function runTool(
       }
       return results;
     }
+    case "research_person": {
+      const brief = await researchPerson({
+        name: String(input.name ?? ""),
+        company: input.company ? String(input.company) : undefined,
+        role: input.role ? String(input.role) : undefined,
+      });
+      if (!brief.available) {
+        return { error: "research_person unavailable — use web_search directly instead." };
+      }
+      return brief;
+    }
     default:
       return { error: `unknown tool ${name}` };
   }
@@ -384,5 +422,6 @@ function summarizeRow(r: ConnectionRow) {
     last_contacted: r.last_contacted,
     summary: r.summary?.slice(0, 200) ?? null,
     linkedin_url: r.linkedin_url,
+    owner_user_id: r.user_id ?? null,
   };
 }
