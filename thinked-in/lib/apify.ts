@@ -52,3 +52,38 @@ export function scrapeActivity(
 ): Promise<Record<string, unknown>[]> {
   return runActor(ACTIVITY_ACTOR(), { profileUrl: linkedinUrl, urls: [linkedinUrl], ...extra });
 }
+
+/** Normalized live snapshot of a single profile (premium verification). */
+export interface LiveProfile {
+  fullName: string | null;
+  headline: string | null;
+  jobTitle: string | null;
+  companyName: string | null;
+  location: string | null;
+}
+
+/**
+ * Re-scrape ONE profile to confirm it's current. Used by the premium
+ * verify_profiles tool to catch roles that changed since the CSV import.
+ * Returns null if the actor yields nothing. Actor output keys vary, so we
+ * defensively pull from the common variants.
+ */
+export async function verifyProfile(url: string): Promise<LiveProfile | null> {
+  const items = await runActor(PROFILE_ACTOR(), { profileUrls: [url], urls: [url] });
+  const p = items[0];
+  if (!p) return null;
+  const pick = (...keys: string[]): string | null => {
+    for (const k of keys) {
+      const v = p[k];
+      if (typeof v === "string" && v.trim()) return v.trim();
+    }
+    return null;
+  };
+  return {
+    fullName: pick("fullName", "name", "fullname"),
+    headline: pick("headline", "occupation", "subtitle"),
+    jobTitle: pick("jobTitle", "position", "title", "currentJobTitle"),
+    companyName: pick("companyName", "company", "currentCompany", "companyName1"),
+    location: pick("location", "addressWithCountry", "geoLocationName", "addressWithoutCountry"),
+  };
+}

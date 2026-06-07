@@ -18,10 +18,12 @@ export const maxDuration = 60;
 // Auth: userId comes from Clerk's server-verified session. Every DB query is
 // scoped to it explicitly (service-role client), so data is isolated per user.
 export async function POST(request: NextRequest) {
-  const { userId } = await auth();
+  const { userId, has } = await auth();
   if (!userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+  // Premium plan unlocks live Apify profile verification in the agent.
+  const premium = typeof has === "function" ? has({ plan: "premium" }) : false;
 
   // Expand userIds to all org members.
   // We use the Backend API directly instead of auth().orgId because Clerk only
@@ -105,6 +107,7 @@ export async function POST(request: NextRequest) {
           teamMembers,
           orgSize: userIds.length,
           mode,
+          premium,
           goalContext,
           message,
           history,

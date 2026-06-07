@@ -11,8 +11,9 @@ import {
 } from "./retrieval";
 import { toCard } from "./cards";
 import { mubitRemember, mubitRecordSuggestions } from "../mubit";
+import { verifyProfile } from "../apify";
 import { researchPerson } from "./research";
-import type { ProfileCardData, LinkedInPostData } from "../types";
+import type { ProfileCardData, ProfileVerification, LinkedInPostData } from "../types";
 
 export type MessagesMode = "full" | "metadata" | "none";
 
@@ -30,8 +31,9 @@ const REL_FILTER_PROPS = {
   min_message_count: { type: "integer" },
 } as const;
 
-/** Build the Anthropic tool list for the user's messages mode. */
-export function toolsForMode(mode: MessagesMode): Anthropic.Tool[] {
+/** Build the Anthropic tool list for the user's messages mode.
+ *  `premium` unlocks live Apify verification (re-scraping picks' profiles). */
+export function toolsForMode(mode: MessagesMode, premium = false): Anthropic.Tool[] {
   const relAllowed = mode !== "none";
   const filterProps = relAllowed ? { ...FILTER_PROPS, ...REL_FILTER_PROPS } : FILTER_PROPS;
 
@@ -163,6 +165,30 @@ export function toolsForMode(mode: MessagesMode): Anthropic.Tool[] {
     },
   ];
 
+  if (premium) {
+    tools.push({
+      name: "verify_profiles",
+      description:
+        "PREMIUM. Re-scrape up to 3 of your TOP picks' live LinkedIn profiles to confirm they're still " +
+        "current — titles and companies drift after the user's CSV export. Call this AFTER you've narrowed " +
+        "to your best 1–3 people and BEFORE present_connections. Each result tells you whether the live role " +
+        "still matches our record ('match') or has changed ('stale'). Mention any change in your answer " +
+        "(e.g. 'heads up — she's since moved to Stripe'). Costs apply per profile, so only verify people you " +
+        "are actually about to recommend.",
+      input_schema: {
+        type: "object",
+        properties: {
+          linkedin_urls: {
+            type: "array",
+            items: { type: "string" },
+            description: "1–3 LinkedIn URLs of your top picks to verify (extras are ignored).",
+          },
+        },
+        required: ["linkedin_urls"],
+      },
+    });
+  }
+
   if (mode === "full") {
     tools.push({
       name: "search_messages",
@@ -216,8 +242,29 @@ export interface ToolContext {
   teamMembers?: Record<string, { name: string; avatarUrl: string }>;
   /** Accumulates people surfaced by any tool, for the UI 'matches' cards. */
   collectCards: (cards: ProfileCardData[]) => void;
+  /** True when the user is on the premium plan — unlocks verify_profiles. */
+  premium: boolean;
+  /** Verification results keyed by linkedin_url, stamped onto cards at present time. */
+  verifications: Map<string, ProfileVerification>;
   /** Accumulates LinkedIn posts surfaced via present_web_post. */
   collectLinkedInPosts?: (posts: LinkedInPostData[]) => void;
+}
+
+/** Cap on live verifications per query — Apify bills per profile. */
+const VERIFY_LIMIT = 3;
+
+/** True when the live role still lines up with what we have on record. */
+function rolesAgree(storedPosition: string | null, storedCompany: string | null, live: { jobTitle: string | null; companyName: string | null; headline: string | null }): boolean {
+  const norm = (s: string | null) => (s ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const liveText = norm([live.jobTitle, live.companyName, live.headline].filter(Boolean).join(" "));
+  if (!liveText) return false;
+  const company = norm(storedCompany);
+  const position = norm(storedPosition);
+  // Agree if the live profile still mentions the recorded company (most robust signal),
+  // or the recorded job title when we have no company to anchor on.
+  if (company && liveText.includes(company)) return true;
+  if (!company && position && liveText.includes(position.split(" ").slice(0, 2).join(" "))) return true;
+  return false;
 }
 
 /** Execute one tool call; returns a compact JSON-able result for the model. */
@@ -285,18 +332,22 @@ export async function runTool(
         .in("user_id", userIds)
         .in("linkedin_url", urls);
       const rows = (data ?? []) as ConnectionRow[];
-      collectCards(rows.map((r) => {
-        const isTeam = r.user_id !== userId;
-        const tm = isTeam ? ctx.teamMembers?.[r.user_id ?? ""] : undefined;
-        return {
-          ...toCard(r),
-          fromTeam: isTeam,
-          relationshipStrength: r.relationship_strength ?? undefined,
-          lastContacted: r.last_contacted ?? null,
-          viaName: tm?.name,
-          viaAvatarUrl: tm?.avatarUrl,
-        };
-      }));
+      collectCards(
+        rows.map((r) => {
+          const isTeam = r.user_id !== userId;
+          const tm = isTeam ? ctx.teamMembers?.[r.user_id ?? ""] : undefined;
+          const card: ProfileCardData = {
+            ...toCard(r),
+            fromTeam: isTeam,
+            relationshipStrength: r.relationship_strength ?? undefined,
+            lastContacted: r.last_contacted ?? null,
+            viaName: tm?.name,
+            viaAvatarUrl: tm?.avatarUrl,
+          };
+          const v = ctx.verifications.get(r.linkedin_url ?? "");
+          return v ? { ...card, verified: v } : card;
+        }),
+      );
 
       // Record each suggestion for outreach tracking and the promise-loop memory.
       if (rows.length) {
@@ -340,6 +391,60 @@ export async function runTool(
         subject: h.subject,
         snippet: h.content?.slice(0, 280) ?? null,
       }));
+    }
+    case "verify_profiles": {
+      if (!ctx.premium) {
+        return { error: "verify_profiles requires a premium subscription." };
+      }
+      const urls = ((input.linkedin_urls as string[]) ?? [])
+        .filter((u) => typeof u === "string" && u.trim())
+        .slice(0, VERIFY_LIMIT);
+      if (!urls.length) return { error: "linkedin_urls is required" };
+
+      // Pull what we have on record for these people, to compare against the live scrape.
+      const { data } = await supa
+        .from("connections")
+        .select("first_name, last_name, position, company, linkedin_url")
+        .eq("user_id", userId)
+        .in("linkedin_url", urls);
+      const stored = new Map(
+        ((data ?? []) as ConnectionRow[]).map((r) => [r.linkedin_url, r]),
+      );
+
+      const checkedAt = new Date().toISOString();
+      const results = [];
+      for (const url of urls) {
+        const rec = stored.get(url);
+        const recordedName = rec ? [rec.first_name, rec.last_name].filter(Boolean).join(" ") : null;
+        let verification: ProfileVerification;
+        try {
+          const live = await verifyProfile(url);
+          if (!live) {
+            verification = { status: "unreachable", currentPosition: null, currentCompany: null, checkedAt };
+          } else {
+            const agree = rolesAgree(rec?.position ?? null, rec?.company ?? null, live);
+            verification = {
+              status: agree ? "match" : "stale",
+              currentPosition: live.jobTitle ?? live.headline,
+              currentCompany: live.companyName,
+              checkedAt,
+            };
+          }
+        } catch (e) {
+          verification = { status: "unreachable", currentPosition: null, currentCompany: null, checkedAt };
+          console.error("[VERIFY] failed for", url, e instanceof Error ? e.message : e);
+        }
+        ctx.verifications.set(url, verification);
+        results.push({
+          name: recordedName,
+          linkedin_url: url,
+          recorded_role: rec ? [rec.position, rec.company].filter(Boolean).join(" at ") : null,
+          status: verification.status,
+          live_position: verification.currentPosition,
+          live_company: verification.currentCompany,
+        });
+      }
+      return results;
     }
     case "research_person": {
       const brief = await researchPerson({

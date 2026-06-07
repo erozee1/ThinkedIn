@@ -1,0 +1,19 @@
+{
+  "name": "thinked-in-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Passively observes LinkedIn actions and freshens your thinkedin network.",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "compile": "tsc --noEmit",
+    "postinstall": "wxt prepare"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.287",
+    "typescript": "^5.7.2",
+    "wxt": "^0.20.0"
+  }
+}

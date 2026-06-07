@@ -42,6 +42,8 @@ export interface RunAgentOptions {
   onToolCall?: (name: string, input: Record<string, unknown>) => void;
   /** Called after a tool returns, with a short result count/summary. */
   onToolResult?: (name: string, resultCount: number | null) => void;
+  /** Premium subscriber — unlocks the live Apify verify_profiles tool. */
+  premium?: boolean;
   /** Clerk user info for all org members — used to populate viaName/viaAvatarUrl on team cards. */
   teamMembers?: Record<string, { name: string; avatarUrl: string }>;
   anthropic?: Anthropic;
@@ -58,11 +60,12 @@ const WEB_SEARCH_TOOL: Anthropic.WebSearchTool20250305 = {
 
 export async function runAgent(opts: RunAgentOptions): Promise<void> {
   const anthropic = opts.anthropic ?? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const premium = opts.premium ?? false;
   const tools: (Anthropic.Tool | Anthropic.WebSearchTool20250305)[] = [
     WEB_SEARCH_TOOL,
-    ...toolsForMode(opts.mode),
+    ...toolsForMode(opts.mode, premium),
   ];
-  const system = systemPrompt(opts.mode, opts.goalContext, opts.orgSize);
+  const system = systemPrompt(opts.mode, opts.goalContext, premium, opts.orgSize);
 
   const collected: ProfileCardData[] = [];
   const collectedPosts: LinkedInPostData[] = [];
@@ -72,6 +75,8 @@ export async function runAgent(opts: RunAgentOptions): Promise<void> {
     userIds: opts.userIds ?? [opts.userId],
     teamMembers: opts.teamMembers,
     collectCards: (cards) => collected.push(...cards),
+    premium,
+    verifications: new Map(),
     collectLinkedInPosts: (posts) => collectedPosts.push(...posts),
   };
 

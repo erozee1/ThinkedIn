@@ -17,3 +17,6 @@
 Connections.csv
 messages.csv
 next-env.d.ts
+# raw proof originals at repo root only (incl. unredacted email) — never commit.
+# The web-served copies in thinked-in/public/proofdocs/ ARE committed.
+/proofdocs/
