@@ -14,7 +14,7 @@ const phases = [
         name: "Simon Rozee",
         role: "Head of Sales Operations",
         company: "Paragon",
-        avatar: "/avatars/SimonRozee.png",
+        avatar: "/Avatars/SimonRozee.png",
         insight:
           "Finding the right tenders is mostly manual — we're checking multiple portals, filtering by hand, and half the time we've already missed the deadline by the time we find it.",
         tag: "Opportunity Discovery",
@@ -24,7 +24,7 @@ const phases = [
         name: "Beth Sugg",
         role: "Bid Manager",
         company: "Paragon Brand Services",
-        avatar: "/avatars/BethSugg.jpeg",
+        avatar: "/Avatars/BethSugg.jpeg",
         insight:
           "The worst part of my job is spending two days writing a bid and then realising we never had a real chance. Better qualification upfront would save everyone's time.",
         tag: "Qualification Waste",
@@ -34,7 +34,7 @@ const phases = [
         name: "Verity Halliday",
         role: "Digital Marketing & Communications Manager",
         company: "Paragon Global Brands",
-        avatar: "/avatars/VerityHaliday.jpeg",
+        avatar: "/Avatars/VerityHaliday.jpeg",
         insight:
           "From a brand perspective, we need to be selective. Winning the wrong tender can damage relationships if you're stretched too thin to deliver.",
         tag: "Strategic Fit",
@@ -44,7 +44,7 @@ const phases = [
         name: "Alexandra O'Neil",
         role: "Bid Manager · Private Market Liaison",
         company: "Paragon Brand Services",
-        avatar: "/avatars/AlexandraO%27Neil.jpeg",
+        avatar: "/Avatars/AlexandraO%27Neil.jpeg",
         insight:
           "Private sector opportunities don't come through a portal. You hear about them through relationships — or you miss them entirely.",
         tag: "Market Visibility",
@@ -54,7 +54,7 @@ const phases = [
         name: "Mark Bickers",
         role: "Head of Public Sector Bids · Public Sector Liaison",
         company: "Paragon Customer Communications",
-        avatar: "/avatars/MarkBickers.jpeg",
+        avatar: "/Avatars/MarkBickers.jpeg",
         insight:
           "There are thousands of public sector contracts published every week. Even with Find a Tender, the signal-to-noise ratio is terrible. You need intelligence, not just aggregation.",
         tag: "Signal vs Noise",
@@ -81,7 +81,7 @@ const phases = [
         name: "John Price",
         role: "Exited Founder & CGO",
         company: "Paragon Brand Services",
-        avatar: "/avatars/JohnPrice.jpeg",
+        avatar: "/Avatars/JohnPrice.jpeg",
         insight:
           "You're solving tenders, but the real problem is bigger. Every small business owner is trying to find customers. What if AI could surface buying intent wherever it naturally appears?",
         tag: "The Pivot",
