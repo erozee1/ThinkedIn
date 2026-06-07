@@ -7,19 +7,20 @@ const isDev = process.env.NODE_ENV === "development";
 const cspHeader = [
   "default-src 'self'",
   // unsafe-eval only in dev (React error overlays use eval)
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  "style-src 'self' 'unsafe-inline'",
+  // clerk.getthinkedin.xyz is the custom Clerk FAPI domain — loads clerk.browser.js and ui.browser.js
+  `script-src 'self' 'unsafe-inline' https://clerk.getthinkedin.xyz${isDev ? " 'unsafe-eval'" : ""}`,
+  "style-src 'self' 'unsafe-inline' https://clerk.getthinkedin.xyz",
   // All avatar / image sources used across public and dashboard routes
   // www.google.com is the Google favicon service used in the web sources strip
-  "img-src 'self' data: blob: https://unavatar.io https://api.dicebear.com https://randomuser.me https://i.pravatar.cc https://img.clerk.com https://www.google.com",
-  "font-src 'self' data:",
-  // Supabase realtime (wss) + Clerk frontend API
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.clerk.com https://*.clerk.accounts.dev https://clerk.com",
-  // Clerk SignIn/SignUp render inside a hosted iframe — must be explicitly allowed
-  "frame-src 'self' https://*.clerk.accounts.dev https://accounts.clerk.com https://clerk.com",
+  "img-src 'self' data: blob: https://unavatar.io https://api.dicebear.com https://randomuser.me https://i.pravatar.cc https://img.clerk.com https://www.google.com https://clerk.getthinkedin.xyz",
+  "font-src 'self' data: https://clerk.getthinkedin.xyz",
+  // Supabase realtime (wss) + Clerk frontend API (custom domain + fallback accounts.dev)
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://clerk.getthinkedin.xyz https://api.clerk.com https://*.clerk.accounts.dev https://clerk.com",
+  // Clerk SignIn/SignUp render inside a hosted iframe
+  "frame-src 'self' https://clerk.getthinkedin.xyz https://*.clerk.accounts.dev https://accounts.clerk.com https://clerk.com",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self' https://*.clerk.accounts.dev https://accounts.clerk.com",
+  "form-action 'self' https://clerk.getthinkedin.xyz https://*.clerk.accounts.dev https://accounts.clerk.com",
   "frame-ancestors 'none'",
   // Upgrading subresource requests breaks local http://localhost dev because
   // the browser rewrites CSS/JS/image fetches to https://localhost.
