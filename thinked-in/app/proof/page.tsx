@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import SiteMast from "@/components/SiteMast";
 import ClerkStats from "@/components/proof/ClerkStats";
+import DocPreview, { type DocItem } from "@/components/proof/DocPreview";
 
 const phases = [
   {
@@ -109,7 +110,19 @@ const phases = [
   },
 ];
 
-const productMilestones = [
+type Milestone = {
+  step: string;
+  avatar: string;
+  person: string;
+  context: string;
+  tag: string;
+  quote: string | null;
+  outcome: string;
+  recording: string | null;
+  docs?: DocItem[];
+};
+
+const productMilestones: Milestone[] = [
   {
     step: "Call 01",
     avatar: "https://randomuser.me/api/portraits/men/52.jpg",
@@ -143,6 +156,10 @@ const productMilestones = [
     outcome:
       "Thajudeen signed an enterprise contract, paying in advance for our enterprise build. His warning became a core requirement: granular control over which connections are shared on a company plan.",
     recording: null,
+    docs: [
+      { url: "/proofdocs/enterprise-agreement.pdf", label: "Signed contract", type: "pdf" },
+      { url: "/proofdocs/afthab-signing-email.png", label: "Signing email", type: "image" },
+    ],
   },
   {
     step: "Note",
@@ -155,6 +172,7 @@ const productMilestones = [
     outcome:
       "Unprompted confirmation that the network-intelligence use case resonates inside other enterprises — not just our design partner's.",
     recording: null,
+    docs: [{ url: "/proofdocs/letter-of-intent-morpheus.pdf", label: "Letter of intent", type: "pdf" }],
   },
   {
     step: "Call 04",
@@ -167,6 +185,7 @@ const productMilestones = [
       "Closed our 2nd enterprise procurement in under a day — £200 each in committed spend. He requested live monitoring, echoing earlier feedback from our design partner.",
     recording:
       "https://web.plaud.ai/s/pub_4d3b57c0-8b07-4d5c-bb04-d325562f8fc5::lmoJE-LJ2H7u4WZ_98S3-I0ACW8hKkq-3pcB2iSmlG2ZUAac4KJZRQitluTcPQJta4g5HNoy_RuJyPvfs5wC",
+    docs: [{ url: "/proofdocs/enterprise-agreement-skillar.pdf", label: "Signed contract", type: "pdf" }],
   },
 ];
 
@@ -386,6 +405,7 @@ export default function ResearchPage() {
                           Listen
                         </a>
                       )}
+                      {m.docs && m.docs.length > 0 && <DocPreview docs={m.docs} />}
                     </div>
                     {m.quote && (
                       <p className="border-l-2 border-emerald-300 pl-3 text-sm italic leading-relaxed text-zinc-700">
