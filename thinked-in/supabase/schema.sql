@@ -214,5 +214,7 @@ create policy "own events" on linkedin_events for all
   using ((select auth.jwt() ->> 'sub') = user_id)
   with check ((select auth.jwt() ->> 'sub') = user_id);
 
--- When a connection was last refreshed by the extension (profile view).
+-- When a connection was last refreshed by the extension (profile view),
+-- and their current LinkedIn headline as last seen (top card — reliably correct).
 alter table connections add column if not exists freshened_at timestamptz;
+alter table connections add column if not exists current_headline text;

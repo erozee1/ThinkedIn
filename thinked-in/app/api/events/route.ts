@@ -49,17 +49,19 @@ export async function POST(request: NextRequest) {
     if (slug) {
       const { data: rows } = await supa
         .from("connections")
-        .select("id, linkedin_url, position, company")
+        .select("id, linkedin_url, current_headline")
         .eq("user_id", userId)
         .ilike("linkedin_url", `%${slug}%`)
         .limit(5);
       const match = (rows ?? []).find((r) => normalizeLinkedInUrl(r.linkedin_url) === norm);
       if (match) {
         connectionId = match.id;
-        didFreshen = true; // matched + refreshed (freshened_at), even if no field changed
+        didFreshen = true; // matched + refreshed (freshened_at), even if nothing changed
+        // Only update the live HEADLINE — it's the reliably-correct top-card field.
+        // We deliberately do NOT overwrite position/company: the top card often
+        // shows the SCHOOL (not the employer), which would corrupt good data.
         const update: Record<string, unknown> = { freshened_at: new Date().toISOString() };
-        if (ev.position && ev.position !== match.position) update.position = ev.position;
-        if (ev.company && ev.company !== match.company) update.company = ev.company;
+        if (ev.headline && ev.headline !== match.current_headline) update.current_headline = ev.headline;
         await supa.from("connections").update(update).eq("id", match.id);
         freshened++;
       }

@@ -22,6 +22,10 @@ export interface ProfileViewEvent {
   company?: string | null;
   /** LinkedIn vanity slug, e.g. "ada-lovelace-8b3a21". */
   publicIdentifier?: string | null;
+  /** Which extraction source produced the fields (json-ld / voyager / og / dom). */
+  source?: string | null;
+  /** TEMP debug: snapshot of what the page exposes, to fix extraction. */
+  diag?: Record<string, unknown> | null;
 }
 
 export type LinkedInEvent = ProfileViewEvent;
@@ -63,6 +67,8 @@ export function parseEventsBatch(body: unknown): EventsBatch | null {
       position: str("position"),
       company: str("company"),
       publicIdentifier: str("publicIdentifier"),
+      source: str("source"),
+      diag: ev.diag && typeof ev.diag === "object" ? (ev.diag as Record<string, unknown>) : null,
     });
   }
   return { events };
