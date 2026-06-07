@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { toolsForMode, runTool, type MessagesMode, type ToolContext } from "./tools";
 import { systemPrompt } from "./prompt";
 import { dedupeCards } from "./cards";
-import type { ProfileCardData, ToolCallInfo } from "../types";
+import type { ProfileCardData, ToolCallInfo, WebResultData, LinkedInPostData } from "../types";
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 const MAX_STEPS = 6;
@@ -34,6 +34,10 @@ export interface RunAgentOptions {
   onText: (text: string) => void;
   /** Called with the cumulative, deduped list of surfaced people. */
   onMatches: (matches: ProfileCardData[]) => void;
+  /** Called after a turn that included web searches, with the source URLs found. */
+  onWebResults?: (results: WebResultData[]) => void;
+  /** Called at the end with all LinkedIn posts surfaced by present_web_post. */
+  onLinkedInPosts?: (posts: LinkedInPostData[]) => void;
   /** Called when the agent invokes a tool (before it runs) — for progress UI. */
   onToolCall?: (name: string, input: Record<string, unknown>) => void;
   /** Called after a tool returns, with a short result count/summary. */
@@ -61,12 +65,14 @@ export async function runAgent(opts: RunAgentOptions): Promise<void> {
   const system = systemPrompt(opts.mode, opts.goalContext, opts.orgSize);
 
   const collected: ProfileCardData[] = [];
+  const collectedPosts: LinkedInPostData[] = [];
   const ctx: ToolContext = {
     supa: opts.supa,
     userId: opts.userId,
     userIds: opts.userIds ?? [opts.userId],
     teamMembers: opts.teamMembers,
     collectCards: (cards) => collected.push(...cards),
+    collectLinkedInPosts: (posts) => collectedPosts.push(...posts),
   };
 
   const messages: Anthropic.MessageParam[] = [
@@ -83,6 +89,33 @@ export async function runAgent(opts: RunAgentOptions): Promise<void> {
 
     const toolUses = msg.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
     const serverToolUses = msg.content.filter((b): b is Anthropic.ServerToolUseBlock => b.type === "server_tool_use");
+
+    // Extract web search result sources for the UI sources strip.
+    if (opts.onWebResults) {
+      const webResultBlocks = msg.content.filter(
+        (b): b is Anthropic.WebSearchToolResultBlock => b.type === "web_search_tool_result",
+      );
+      const webResults: WebResultData[] = [];
+      for (const block of webResultBlocks) {
+        if (Array.isArray(block.content)) {
+          for (const r of block.content) {
+            try {
+              const domain = new URL(r.url).hostname.replace(/^www\./, "");
+              webResults.push({
+                url: r.url,
+                title: r.title,
+                pageAge: r.page_age ?? null,
+                domain,
+                faviconUrl: `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
+              });
+            } catch {
+              // skip malformed URLs
+            }
+          }
+        }
+      }
+      if (webResults.length) opts.onWebResults(webResults);
+    }
 
     const toolInfos: ToolCallInfo[] = serverToolUses.map((tu) => ({
       name: tu.name,
@@ -121,7 +154,7 @@ export async function runAgent(opts: RunAgentOptions): Promise<void> {
     messages.push({ role: "user", content: results });
   }
 
-  // Emit matches after the loop so they are attributed to the final answer turn,
-  // not to a thinking step. This ensures profile cards appear alongside the text.
+  // Emit matches and posts after the loop, attributed to the final answer turn.
   if (collected.length) opts.onMatches(dedupeCards(collected));
+  if (collectedPosts.length) opts.onLinkedInPosts?.(collectedPosts);
 }

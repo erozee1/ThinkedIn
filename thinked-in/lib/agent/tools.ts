@@ -12,7 +12,7 @@ import {
 import { toCard } from "./cards";
 import { mubitRemember, mubitRecordSuggestions } from "../mubit";
 import { researchPerson } from "./research";
-import type { ProfileCardData } from "../types";
+import type { ProfileCardData, LinkedInPostData } from "../types";
 
 export type MessagesMode = "full" | "metadata" | "none";
 
@@ -191,6 +191,8 @@ export interface ToolContext {
   teamMembers?: Record<string, { name: string; avatarUrl: string }>;
   /** Accumulates people surfaced by any tool, for the UI 'matches' cards. */
   collectCards: (cards: ProfileCardData[]) => void;
+  /** Accumulates LinkedIn posts surfaced via present_web_post. */
+  collectLinkedInPosts?: (posts: LinkedInPostData[]) => void;
 }
 
 /** Execute one tool call; returns a compact JSON-able result for the model. */

@@ -59,6 +59,28 @@ export interface PostData {
   body: string;
 }
 
+/** A single web search result source shown in the sources strip. */
+export interface WebResultData {
+  url: string;
+  title: string;
+  pageAge?: string | null;
+  domain: string;
+  faviconUrl: string;
+}
+
+/** A LinkedIn-style post surfaced from web search results. */
+export interface LinkedInPostData {
+  authorName: string;
+  authorTitle?: string;
+  authorAvatarUrl?: string;
+  content: string;
+  sourceUrl?: string;
+  imageUrl?: string;
+  timeAgo?: string;
+  likesCount?: number;
+  commentsCount?: number;
+}
+
 /** Structured info about a single tool call, forwarded from the agent to the client. */
 export interface ToolCallInfo {
   name: string;
@@ -86,6 +108,10 @@ export interface ChatMessage {
   matches?: ProfileCardData[];
   /** A drafted post/message the assistant surfaced. */
   post?: PostData;
+  /** Web search source URLs found during this turn. */
+  webResults?: WebResultData[];
+  /** LinkedIn-style posts surfaced from web search. */
+  linkedInPosts?: LinkedInPostData[];
   /** Set while an assistant message is still streaming in. */
   pending?: boolean;
 }
