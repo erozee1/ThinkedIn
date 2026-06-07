@@ -145,7 +145,7 @@ export default function ResearchPage() {
         {/* Header */}
         <div className="mb-20 text-center">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-400">
-            User Research · June 2025
+            User Research · June 2026
           </p>
           <h1 className="mb-4 text-4xl font-semibold tracking-tight text-zinc-900">
             The Road to thinked-in
