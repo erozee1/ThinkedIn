@@ -8,16 +8,20 @@ const cspHeader = [
   "default-src 'self'",
   // unsafe-eval only in dev (React error overlays use eval)
   // clerk.getthinkedin.xyz is the custom Clerk FAPI domain — loads clerk.browser.js and ui.browser.js
-  `script-src 'self' 'unsafe-inline' https://clerk.getthinkedin.xyz${isDev ? " 'unsafe-eval'" : ""}`,
+  // challenges.cloudflare.com is required for Clerk's Cloudflare Turnstile CAPTCHA widget
+  `script-src 'self' 'unsafe-inline' https://clerk.getthinkedin.xyz https://*.clerk.accounts.dev https://challenges.cloudflare.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://clerk.getthinkedin.xyz",
   // All avatar / image sources used across public and dashboard routes
   // www.google.com is the Google favicon service used in the web sources strip
   "img-src 'self' data: blob: https://unavatar.io https://api.dicebear.com https://randomuser.me https://i.pravatar.cc https://img.clerk.com https://www.google.com https://clerk.getthinkedin.xyz",
   "font-src 'self' data: https://clerk.getthinkedin.xyz",
   // Supabase realtime (wss) + Clerk frontend API (custom domain + fallback accounts.dev)
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://clerk.getthinkedin.xyz https://api.clerk.com https://*.clerk.accounts.dev https://clerk.com",
-  // Clerk SignIn/SignUp render inside a hosted iframe
-  "frame-src 'self' https://clerk.getthinkedin.xyz https://*.clerk.accounts.dev https://accounts.clerk.com https://clerk.com",
+  // challenges.cloudflare.com is required for Turnstile token validation
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://clerk.getthinkedin.xyz https://api.clerk.com https://*.clerk.accounts.dev https://clerk.com https://challenges.cloudflare.com",
+  // Clerk SignIn/SignUp render inside a hosted iframe; Turnstile CAPTCHA renders in a Cloudflare iframe
+  "frame-src 'self' https://clerk.getthinkedin.xyz https://*.clerk.accounts.dev https://accounts.clerk.com https://clerk.com https://challenges.cloudflare.com",
+  // Clerk and Turnstile both offload work to web workers
+  "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self' https://clerk.getthinkedin.xyz https://*.clerk.accounts.dev https://accounts.clerk.com",

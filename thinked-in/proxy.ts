@@ -2,7 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // "/" is the public marketing landing (signed-out hero → "Get started").
 // Everything else (e.g. /dashboard, /api/*) stays protected.
-const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)", "/proof", "/research", "/pricing", "/waitlist(.*)", "/api/debug", "/api/webhooks/clerk"]);
+const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)", "/proof", "/research", "/pricing", "/waitlist(.*)", "/api/debug", "/api/webhooks/clerk", "/__clerk/(.*)"]);
 
 export default clerkMiddleware(async (auth, request) => {
   const bypass = request.cookies.get("tk_bypass")?.value === "1";
