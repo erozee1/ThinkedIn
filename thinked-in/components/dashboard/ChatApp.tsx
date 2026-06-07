@@ -12,6 +12,7 @@ import BackgroundFX from "@/components/BackgroundFX";
 import ChatSidebar from "./ChatSidebar";
 import ChatThread from "./ChatThread";
 import ChatInput from "./ChatInput";
+import WarmPathPanel from "./WarmPathPanel";
 
 const EXAMPLE_PROMPTS = [
   "Find me someone who owns a software company in England",
@@ -78,6 +79,7 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
 
   const [streaming, setStreaming] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const [pathPerson, setPathPerson] = useState<ProfileCardData | null>(null);
 
   // Persist history to the store (skip while streaming to avoid thrashing).
   useEffect(() => {
@@ -204,9 +206,16 @@ export default function ChatApp({ onReimport }: { onReimport: () => void }) {
               onPick={sendMessage}
             />
           ) : (
-            <ChatThread messages={active.messages} />
+            <ChatThread messages={active.messages} onCardClick={setPathPerson} />
           )}
           <ChatInput onSend={sendMessage} disabled={streaming} />
+          {pathPerson ? (
+            <WarmPathPanel
+              person={pathPerson}
+              currentUser={{ name: user?.fullName ?? "You", avatarUrl: user?.imageUrl ?? null }}
+              onClose={() => setPathPerson(null)}
+            />
+          ) : null}
         </div>
       </main>
     </div>

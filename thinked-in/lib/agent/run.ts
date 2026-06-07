@@ -38,6 +38,8 @@ export interface RunAgentOptions {
   onToolCall?: (name: string, input: Record<string, unknown>) => void;
   /** Called after a tool returns, with a short result count/summary. */
   onToolResult?: (name: string, resultCount: number | null) => void;
+  /** Clerk user info for all org members — used to populate viaName/viaAvatarUrl on team cards. */
+  teamMembers?: Record<string, { name: string; avatarUrl: string }>;
   anthropic?: Anthropic;
 }
 
@@ -63,6 +65,7 @@ export async function runAgent(opts: RunAgentOptions): Promise<void> {
     supa: opts.supa,
     userId: opts.userId,
     userIds: opts.userIds ?? [opts.userId],
+    teamMembers: opts.teamMembers,
     collectCards: (cards) => collected.push(...cards),
   };
 

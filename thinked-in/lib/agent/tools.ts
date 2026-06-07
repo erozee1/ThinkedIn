@@ -187,6 +187,8 @@ export interface ToolContext {
   userId: string;
   /** All queryable user ids: [userId] for solo, org member ids for org users. */
   userIds: string[];
+  /** Name + avatar for each org member — populates viaName/viaAvatarUrl on team cards. */
+  teamMembers?: Record<string, { name: string; avatarUrl: string }>;
   /** Accumulates people surfaced by any tool, for the UI 'matches' cards. */
   collectCards: (cards: ProfileCardData[]) => void;
 }
@@ -256,7 +258,18 @@ export async function runTool(
         .in("user_id", userIds)
         .in("linkedin_url", urls);
       const rows = (data ?? []) as ConnectionRow[];
-      collectCards(rows.map((r) => ({ ...toCard(r), fromTeam: r.user_id !== userId })));
+      collectCards(rows.map((r) => {
+        const isTeam = r.user_id !== userId;
+        const tm = isTeam ? ctx.teamMembers?.[r.user_id ?? ""] : undefined;
+        return {
+          ...toCard(r),
+          fromTeam: isTeam,
+          relationshipStrength: r.relationship_strength ?? undefined,
+          lastContacted: r.last_contacted ?? null,
+          viaName: tm?.name,
+          viaAvatarUrl: tm?.avatarUrl,
+        };
+      }));
 
       // Record each suggestion for outreach tracking and the promise-loop memory.
       if (rows.length) {

@@ -40,6 +40,14 @@ export type ProfileCardData = Pick<
 > & {
   /** True when the connection belongs to an org team member rather than the requesting user. */
   fromTeam?: boolean;
+  /** Relationship strength of the connection's owner with this person. */
+  relationshipStrength?: string;
+  /** ISO date of last contact between the owner and this person. */
+  lastContacted?: string | null;
+  /** Name of the org team member who owns this connection (org networks only). */
+  viaName?: string;
+  /** Avatar URL of the org team member who owns this connection. */
+  viaAvatarUrl?: string;
 };
 
 export type ChatRole = "user" | "assistant";

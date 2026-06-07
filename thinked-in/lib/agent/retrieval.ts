@@ -64,7 +64,7 @@ export async function searchByMeaning(
 }
 
 const CONN_COLS =
-  "id, first_name, last_name, position, company, location, country, seniority, industry, summary, linkedin_url, relationship_strength, last_contacted, message_count";
+  "id, user_id, first_name, last_name, position, company, location, country, seniority, industry, summary, linkedin_url, relationship_strength, last_contacted, message_count";
 
 interface FilterBuilder {
   in(column: string, values: string[]): this;

@@ -18,27 +18,42 @@ export const maxDuration = 60;
 // Auth: userId comes from Clerk's server-verified session. Every DB query is
 // scoped to it explicitly (service-role client), so data is isolated per user.
 export async function POST(request: NextRequest) {
-  const { userId, orgId } = await auth();
+  const { userId } = await auth();
   if (!userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Expand userIds to all org members when the user is in an org.
+  // Expand userIds to all org members.
+  // We use the Backend API directly instead of auth().orgId because Clerk only
+  // populates orgId when the user has an active org session (requires OrganizationSwitcher).
+  // Fetching org memberships by userId works regardless of session state.
   let userIds: string[] = [userId];
-  if (orgId) {
-    try {
-      const clerk = await clerkClient();
-      const memberships = await clerk.organizations.getOrganizationMembershipList({
-        organizationId: orgId,
+  let teamMembers: Record<string, { name: string; avatarUrl: string }> = {};
+  try {
+    const clerk = await clerkClient();
+    const orgMemberships = await clerk.users.getOrganizationMembershipList({ userId, limit: 10 });
+    const allUserIds = new Set<string>([userId]);
+
+    for (const orgMembership of orgMemberships.data) {
+      const members = await clerk.organizations.getOrganizationMembershipList({
+        organizationId: orgMembership.organization.id,
         limit: 50,
       });
-      const memberIds = memberships.data
-        .map((m) => m.publicUserData?.userId)
-        .filter((id): id is string => Boolean(id));
-      if (memberIds.length > 0) userIds = memberIds;
-    } catch {
-      // Fall back to solo if org fetch fails — never block the chat request.
+      for (const m of members.data) {
+        const id = m.publicUserData?.userId;
+        if (id) {
+          allUserIds.add(id);
+          teamMembers[id] = {
+            name: [m.publicUserData.firstName, m.publicUserData.lastName].filter(Boolean).join(" "),
+            avatarUrl: m.publicUserData.imageUrl ?? "",
+          };
+        }
+      }
     }
+
+    if (allUserIds.size > 1) userIds = [...allUserIds];
+  } catch {
+    // Fall back to solo if org fetch fails — never block the chat request.
   }
 
   let message = "";
@@ -87,6 +102,7 @@ export async function POST(request: NextRequest) {
           supa,
           userId,
           userIds,
+          teamMembers,
           orgSize: userIds.length,
           mode,
           goalContext,
